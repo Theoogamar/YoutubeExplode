@@ -26,7 +26,7 @@ namespace DemoConsole
 
             // Get the video ID
             Console.Write("Enter YouTube video ID or URL: ");
-            var videoId = Console.ReadLine();
+            var videoId = "https://www.youtube.com/watch?v=DyDfgMOUjCI&list=RDLrNvBIqlkIM&index=6"; //Console.ReadLine();
             videoId = NormalizeVideoId(videoId);
 
             // Get media stream info set
