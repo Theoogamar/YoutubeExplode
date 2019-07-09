@@ -80,7 +80,7 @@ namespace YoutubeExplode
                 var playerConfigJson = JToken.Parse(playerConfigRaw);
 
                 // Extract STS
-                var sts = playerConfigJson.SelectToken("sts").Value<string>();
+                var sts = playerConfigJson.SelectToken("args.cver").Value<string>();
 
                 // Extract player source URL
                 var playerSourceUrl = "https://youtube.com" + playerConfigJson.SelectToken("assets.js").Value<string>();
