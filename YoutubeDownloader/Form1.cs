@@ -30,8 +30,11 @@ namespace YoutubeDownloader
         // stop watches for downloading audio
         private List<Stopwatch> stopwatches = new List<Stopwatch>();
 
-        // iterator for the loading... animation
-        private int iter = -1;
+        // iterator for the "loading..." animation
+        private sbyte iter = -1;
+
+        // store the text on audio select button
+        private string AudioText;
 
         // enum for listView
         private enum subItems
@@ -101,9 +104,11 @@ namespace YoutubeDownloader
 
                 // add the highest quailty audio to the list
                 if (highest == 0)
-                    comBoxAudio.Items.Add("Highest bitrate: " + (int)Audio.Bitrate / 1000 + "kbps .mp3");
+                    btnAudio.Text = "Highest bitrate: " + (int)Audio.Bitrate / 1000 + "kbps .mp3";
                 else
-                    comBoxAudio.Items.Add(highest + 1 + "nd Highest bitrate: " + (int)Audio.Bitrate / 1000 + "kbps .mp3");
+                    btnAudio.Text = highest + 1 + "nd Highest bitrate: " + (int)Audio.Bitrate / 1000 + "kbps .mp3";
+
+                AudioText = btnAudio.Text;
 
                 // save the url for downloading
                 audioUrl = Audio.Url;
@@ -125,9 +130,6 @@ namespace YoutubeDownloader
                     videoUrls.Add(streamInfo.Muxed[i].Url);
                 }
 
-                // default to select audio
-                comBoxAudio.SelectedIndex = 0;
-
                 // toggle it back off
                 txtLoading.Visible = false;
 
@@ -147,14 +149,13 @@ namespace YoutubeDownloader
         {
             txtBoxVidName.Enabled = b;
             txtBoxVidName.Enabled = b;
-            comBoxAudio.Enabled = b;
             comBoxVideo.Enabled = b;
             btnDownload.Enabled = b;
 
             // if disabling UI elements also clear them
             if (!b)
             {
-                comBoxAudio.Items.Clear();
+                btnAudio.Text = "";
                 comBoxVideo.Items.Clear();
                 txtBoxVidName.Text = "";
             }
@@ -185,8 +186,10 @@ namespace YoutubeDownloader
             }
 
             // if the user picked to download audio or video
-            if (comBoxAudio.SelectedIndex != -1)
+            if (btnAudio.Text != "")
             {
+                AudioText = "";
+
                 // adds a donwload item to the listview
                 LvAddItem(ref listView, fileName, false, "a");
 
@@ -246,6 +249,8 @@ namespace YoutubeDownloader
             }
             else if (comBoxVideo.SelectedIndex != -1)
             {
+                AudioText = "";
+
                 // get the video codec
                 string item = comBoxVideo.Items[comBoxVideo.SelectedIndex] as string;
                 string codec = item.Split(' ')[2];
@@ -292,7 +297,7 @@ namespace YoutubeDownloader
                             customWebClient.ProgBar.Top -= 18;
                         }
 
-                        //// if the index lands on a audio listview move it off
+                        // if the index lands on a audio listview move it off
                         if (listView.Items[customWebClient.Index].SubItems[(int)subItems.Media].Text == "a")
                             customWebClient.Index--;
 
@@ -320,7 +325,7 @@ namespace YoutubeDownloader
                     }
                 }
             }
-            // refresh stopWatch list (when the listView is empty)
+            // clear out stopWatch list (when the listView is empty)
             if (listView.Items.Count == 0)
                 stopwatches = new List<Stopwatch>();
 
@@ -374,15 +379,15 @@ namespace YoutubeDownloader
         }
 
         // so the user can't selected audio and video it's one or the other
-        private void ComBoxAudio_SelectedIndexChanged(object sender, EventArgs e)
+        private void btnAudio_Click(object sender, EventArgs e)
         {
-            if (comBoxAudio.SelectedIndex != -1)
-                comBoxVideo.SelectedIndex = -1;
+            btnAudio.Text = AudioText;
+            comBoxVideo.SelectedIndex = -1;
         }
         private void ComBoxVideo_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (comBoxVideo.SelectedIndex != -1)
-                comBoxAudio.SelectedIndex = -1;
+                btnAudio.Text = "";
         }
 
         // remove illegal characters function

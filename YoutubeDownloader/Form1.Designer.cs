@@ -37,7 +37,6 @@
             this.txtBoxVidName = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.comBoxAudio = new System.Windows.Forms.ComboBox();
             this.comBoxVideo = new System.Windows.Forms.ComboBox();
             this.btnDownload = new System.Windows.Forms.Button();
             this.txtLoading = new System.Windows.Forms.Label();
@@ -46,6 +45,7 @@
             this.progress = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.total = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.timer = new System.Windows.Forms.Timer(this.components);
+            this.btnAudio = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.Thumbnail)).BeginInit();
             this.SuspendLayout();
             // 
@@ -130,19 +130,6 @@
             this.label3.TabIndex = 6;
             this.label3.Text = "Video";
             // 
-            // comBoxAudio
-            // 
-            this.comBoxAudio.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.comBoxAudio.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comBoxAudio.Enabled = false;
-            this.comBoxAudio.ForeColor = System.Drawing.SystemColors.Control;
-            this.comBoxAudio.FormattingEnabled = true;
-            this.comBoxAudio.Location = new System.Drawing.Point(15, 139);
-            this.comBoxAudio.Name = "comBoxAudio";
-            this.comBoxAudio.Size = new System.Drawing.Size(190, 21);
-            this.comBoxAudio.TabIndex = 7;
-            this.comBoxAudio.SelectedIndexChanged += new System.EventHandler(this.ComBoxAudio_SelectedIndexChanged);
-            // 
             // comBoxVideo
             // 
             this.comBoxVideo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
@@ -221,17 +208,29 @@
             this.timer.Interval = 250;
             this.timer.Tick += new System.EventHandler(this.timer_Tick);
             // 
+            // btnAudio
+            // 
+            this.btnAudio.BackColor = System.Drawing.SystemColors.Control;
+            this.btnAudio.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnAudio.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.btnAudio.Location = new System.Drawing.Point(28, 139);
+            this.btnAudio.Name = "btnAudio";
+            this.btnAudio.Size = new System.Drawing.Size(181, 23);
+            this.btnAudio.TabIndex = 12;
+            this.btnAudio.UseVisualStyleBackColor = false;
+            this.btnAudio.Click += new System.EventHandler(this.btnAudio_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.ClientSize = new System.Drawing.Size(704, 441);
+            this.Controls.Add(this.btnAudio);
             this.Controls.Add(this.listView);
             this.Controls.Add(this.txtLoading);
             this.Controls.Add(this.btnDownload);
             this.Controls.Add(this.comBoxVideo);
-            this.Controls.Add(this.comBoxAudio);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.txtBoxVidName);
@@ -259,7 +258,6 @@
         private System.Windows.Forms.TextBox txtBoxVidName;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.ComboBox comBoxAudio;
         private System.Windows.Forms.ComboBox comBoxVideo;
         private System.Windows.Forms.Button btnDownload;
         private System.Windows.Forms.Label txtLoading;
@@ -268,6 +266,7 @@
         private System.Windows.Forms.ColumnHeader progress;
         private System.Windows.Forms.ColumnHeader total;
         private System.Windows.Forms.Timer timer;
+        private System.Windows.Forms.Button btnAudio;
     }
 }
 
