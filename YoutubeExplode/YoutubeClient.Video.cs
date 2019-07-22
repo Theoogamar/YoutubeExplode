@@ -78,14 +78,10 @@ namespace YoutubeExplode
                             .Groups["Json"].Value)
                     .First(s => !s.IsNullOrWhiteSpace());
                 var playerConfigJson = JToken.Parse(playerConfigRaw);
-<<<<<<< HEAD
 
                 // Extract STS
                 var sts = playerConfigJson.SelectToken("args.cver").Value<string>();
 
-=======
-                
->>>>>>> upstream/master
                 // Extract player source URL
                 var playerSourceUrl = "https://youtube.com" + playerConfigJson.SelectToken("assets.js").Value<string>();
 
