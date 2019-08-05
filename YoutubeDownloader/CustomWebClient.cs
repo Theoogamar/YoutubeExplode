@@ -7,7 +7,10 @@ namespace YoutubeDownloader
 {
     public class CustomWebClient : WebClient
     {
-        public ProgressBar ProgBar { get; set; }
+        public ProgressBar Progbar { get; set; }
+
         public int Index { get; set; }
+
+        public string Name { get; set; }
     }
 }

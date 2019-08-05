@@ -85,10 +85,10 @@ namespace YoutubeDownloader
                     var video = await client.GetVideoAsync(id);
                     txtBoxVidName.Text = video.Title;
                 }
-                catch
+                catch (Exception ex)
                 {
                     // if the YoutubeClient fails to parse the youtube url tell the user and return
-                    txtLoading.Text = "Url is not working";
+                    txtLoading.Text = ex.Message;
                     txtLoading.Visible = true;
                     iter = -1;
                     btnPaste.Enabled = true;
@@ -221,10 +221,10 @@ namespace YoutubeDownloader
                                 MediaFoundationEncoder.EncodeToMp3(reader, FilePath + fileName + ".mp3", Bitrate);
                             }
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             // if something messes up tell the user and return
-                            txtLoading.Text = "Something is up with the codec";
+                            txtLoading.Text = ex.Message;
                             txtLoading.Visible = true;
                             return;
                         }
@@ -262,7 +262,7 @@ namespace YoutubeDownloader
                 using (CustomWebClient web = new CustomWebClient())
                 {
                     // adds a download item to the listview
-                    web.ProgBar = LvAddItem(ref listView, fileName, true, "v");
+                    web.Progbar = LvAddItem(ref listView, fileName, true, "v");
 
                     // reset the video settings in the UI
                     toggleThings(false);
@@ -271,6 +271,9 @@ namespace YoutubeDownloader
                     // add events
                     web.DownloadProgressChanged += web_DownloadProgressChanged;
                     web.DownloadFileCompleted += web_DownloadFileCompleted;
+
+                    // sets the name so i can search for the index
+                    web.Name = fileName;
 
                     // the position in the listView to put the percentage downloaded
                     web.Index = listView.Items.Count - 1;
@@ -285,21 +288,17 @@ namespace YoutubeDownloader
                         var customWebClient = o as CustomWebClient;
 
                         // set the progress on the progress bar
-                        customWebClient.ProgBar.Value = ev.ProgressPercentage;
+                        customWebClient.Progbar.Value = ev.ProgressPercentage;
 
-                        // if the index is out of range
-                        if (customWebClient.Index > listView.Items.Count - 1)
+                        // searchs for the currents index
+                        int index = getIndexByName(customWebClient.Name);
+                        if (index != customWebClient.Index)
                         {
-                            // get back in range
-                            customWebClient.Index--;
-
+                            customWebClient.Index = index;
+                            
                             // move the progress bar down one
-                            customWebClient.ProgBar.Top -= 18;
+                            customWebClient.Progbar.Top -= 18;
                         }
-
-                        // if the index lands on a audio listview move it off
-                        if (listView.Items[customWebClient.Index].SubItems[(int)subItems.Media].Text == "a")
-                            customWebClient.Index--;
 
                         // update the bytes received in the listView
                         listView.Items[customWebClient.Index].SubItems[(int)subItems.Total].Text = 
@@ -314,7 +313,7 @@ namespace YoutubeDownloader
                         var customWebClient = o as CustomWebClient;
 
                         // remove the progress bar
-                        customWebClient.ProgBar.Dispose();
+                        customWebClient.Progbar.Dispose();
 
                         // removes downloaded element
                         listView.Items.RemoveAt(customWebClient.Index);
