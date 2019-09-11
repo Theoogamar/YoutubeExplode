@@ -102,6 +102,16 @@ namespace YoutubeDownloader
                 // get the highest bitrate audio stream with out vorbis
                 var Audio = streamInfo.Audio.GetHighestBitrate(out int highest, AudioEncoding.Vorbis);
 
+                if (Audio == null)
+                {
+                    // if the YoutubeClient fails to get any audio
+                    txtLoading.Text = "There's no audio";
+                    txtLoading.Visible = true;
+                    iter = -1;
+                    btnPaste.Enabled = true;
+                    return;
+                }
+
                 // add the highest quailty audio to the list
                 if (highest == 0)
                     btnAudio.Text = "Highest bitrate: " + (int)Audio.Bitrate / 1000 + "kbps .mp3";
