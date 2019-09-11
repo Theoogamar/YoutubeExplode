@@ -31,7 +31,7 @@ YoutubeExplode is a library that provides an interface to query metadata of YouT
 
 ## Screenshots
 
-![](http://www.tyrrrz.me/Projects/YoutubeExplode/Images/1.png)
+![demo](.screenshots/demo.png)
 
 ## Usage
 
@@ -135,6 +135,10 @@ var video = playlist.Videos.First();
 var videoTitle = video.Title; // "Igorrr - Tout Petit Moineau"
 var videoAuthor = video.Author; // "Igorrr Official"
 ```
+
+## Etymology
+
+The "Explode" in YoutubeExplode comes from the name of a PHP function that splits up strings, [`explode()`](https://www.php.net/manual/en/function.explode.php). When I was just starting development on this library, most of the reference source code I read was written in PHP, hence the inspiration for the name.
 
 ## Libraries used
 
