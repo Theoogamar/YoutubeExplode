@@ -1,19 +1,16 @@
 # YoutubeExplode
 
-[![Build](https://img.shields.io/appveyor/ci/Tyrrrz/YoutubeExplode/master.svg)](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode/branch/master)
-[![Tests](https://img.shields.io/appveyor/tests/Tyrrrz/YoutubeExplode/master.svg)](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode/branch/master/tests)
-[![Coverage](https://img.shields.io/codecov/c/gh/Tyrrrz/YoutubeExplode/master.svg)](https://codecov.io/gh/Tyrrrz/YoutubeExplode)
-[![NuGet](https://img.shields.io/nuget/v/YoutubeExplode.svg)](https://nuget.org/packages/YoutubeExplode)
-[![NuGet](https://img.shields.io/nuget/dt/YoutubeExplode.svg)](https://nuget.org/packages/YoutubeExplode)
-[![Donate](https://img.shields.io/badge/patreon-donate-yellow.svg)](https://patreon.com/tyrrrz)
-[![Donate](https://img.shields.io/badge/buymeacoffee-donate-yellow.svg)](https://buymeacoffee.com/tyrrrz)
+[![Build](https://github.com/Tyrrrz/YoutubeExplode/workflows/CI/badge.svg?branch=master)](https://github.com/Tyrrrz/YoutubeExplode/actions)
+[![Coverage](https://codecov.io/gh/Tyrrrz/YoutubeExplode/branch/master/graph/badge.svg)](https://codecov.io/gh/Tyrrrz/YoutubeExplode)
+[![Version](https://img.shields.io/nuget/v/YoutubeExplode.svg)](https://nuget.org/packages/YoutubeExplode)
+[![Downloads](https://img.shields.io/nuget/dt/YoutubeExplode.svg)](https://nuget.org/packages/YoutubeExplode)
+[![Donate](https://img.shields.io/badge/donate-$$$-purple.svg)](https://tyrrrz.me/donate)
 
 YoutubeExplode is a library that provides an interface to query metadata of YouTube videos, playlists and channels, as well as to resolve and download video streams and closed caption tracks. Behind a layer of abstraction, the library parses raw page content and uses reverse-engineered AJAX requests to retrieve information. As it doesn't use the official API, there's also no need for an API key and there are no usage quotas.
 
 ## Download
 
 - [NuGet](https://nuget.org/packages/YoutubeExplode): `dotnet add package YoutubeExplode`
-- [Continuous integration](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode)
 
 ## Features
 
@@ -139,17 +136,3 @@ var videoAuthor = video.Author; // "Igorrr Official"
 ## Etymology
 
 The "Explode" in YoutubeExplode comes from the name of a PHP function that splits up strings, [`explode()`](https://www.php.net/manual/en/function.explode.php). When I was just starting development on this library, most of the reference source code I read was written in PHP, hence the inspiration for the name.
-
-## Libraries used
-
-- [LtGt](https://github.com/Tyrrrz/LtGt)
-- [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json)
-- [GalaSoft.MVVMLight](http://www.mvvmlight.net)
-- [MaterialDesignInXamlToolkit](https://github.com/ButchersBoy/MaterialDesignInXamlToolkit)
-- [NUnit](https://github.com/nunit/nunit)
-- [Coverlet](https://github.com/tonerdo/coverlet)
-- [Tyrrrz.Extensions](https://github.com/Tyrrrz/Extensions)
-
-## Donate
-
-If you really like my projects and want to support me, consider donating to me on [Patreon](https://patreon.com/tyrrrz) or [BuyMeACoffee](https://buymeacoffee.com/tyrrrz). All donations are optional and are greatly appreciated. 🙏

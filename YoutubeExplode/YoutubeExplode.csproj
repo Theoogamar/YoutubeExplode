@@ -1,23 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../YoutubeExplode.props" />
 
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard1.1;netstandard2.0</TargetFrameworks>
-    <Version>4.7.9</Version>
-    <Company>Tyrrrz</Company>
     <Authors>$(Company)</Authors>
-    <Copyright>Copyright (C) Alexey Golub</Copyright>
     <Description>The ultimate dirty YouTube library. Parses public metadata on YouTube videos, lets you download them and much more. Does not require an API key and does not impose usage quotas.</Description>
     <PackageTags>youtube video download playlist user channel closed caption tracks subtitles parse extract metadata info net core standard</PackageTags>
     <PackageProjectUrl>https://github.com/Tyrrrz/YoutubeExplode</PackageProjectUrl>
     <PackageReleaseNotes>https://github.com/Tyrrrz/YoutubeExplode/blob/master/Changelog.md</PackageReleaseNotes>
-    <PackageIconUrl>https://raw.githubusercontent.com/Tyrrrz/YoutubeExplode/master/favicon.png</PackageIconUrl>
+    <PackageIcon>favicon.png</PackageIcon>
     <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/Tyrrrz/YoutubeExplode</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <DocumentationFile>bin/$(Configuration)/$(TargetFramework)/$(AssemblyName).xml</DocumentationFile>
-    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PublishRepositoryUrl>True</PublishRepositoryUrl>
+    <EmbedUntrackedSources>True</EmbedUntrackedSources>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
@@ -25,8 +23,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LtGt" Version="1.0.1" />
+    <None Include="../favicon.png" Pack="True" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LtGt" Version="1.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19554-01" PrivateAssets="all"/>
+    <PackageReference Include="Nullable" Version="1.1.1" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

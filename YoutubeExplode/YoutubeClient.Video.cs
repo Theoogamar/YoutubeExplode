@@ -60,6 +60,8 @@ namespace YoutubeExplode
 
         private async Task<PlayerConfiguration> GetPlayerConfigurationAsync(string videoId)
         {
+            // Some awful code ahead. Will rework when I have time.
+
             // Try to get from video info
             {
                 // Get video embed page HTML
@@ -68,11 +70,8 @@ namespace YoutubeExplode
                 // Get player config JSON
                 var playerConfigRaw = videoEmbedPageHtml.GetElementsByTagName("script")
                     .Select(e => e.GetInnerText())
-                    .Select(s =>
-                        Regex.Match(s,
-                                @"yt\.setConfig\({'PLAYER_CONFIG': (?<Json>\{[^\{\}]*(((?<Open>\{)[^\{\}]*)+((?<Close-Open>\})[^\{\}]*)+)*(?(Open)(?!))\})")
-                            .Groups["Json"].Value)
-                    .First(s => !s.IsNullOrWhiteSpace());
+                    .Select(s => Regex.Match(s, @"yt\.setConfig\({'PLAYER_CONFIG':(.*)}\);").Groups[1].Value)
+                    .First(s => !string.IsNullOrWhiteSpace(s));
                 var playerConfigJson = JToken.Parse(playerConfigRaw);
 
                 // Extract STS
@@ -97,7 +96,7 @@ namespace YoutubeExplode
 
                 // If there is no error - extract info and return
                 var errorReason = playerResponseJson.SelectToken("playabilityStatus.reason")?.Value<string>();
-                if (errorReason.IsNullOrWhiteSpace())
+                if (string.IsNullOrWhiteSpace(errorReason))
                 {
                     // Extract whether the video is a live stream
                     var isLiveStream = playerResponseJson.SelectToken("videoDetails.isLive")?.Value<bool>() == true;
@@ -115,16 +114,20 @@ namespace YoutubeExplode
                         !isLiveStream ? videoInfoDic.GetValueOrDefault("url_encoded_fmt_stream_map") : null;
                     var adaptiveStreamInfosUrlEncoded =
                         !isLiveStream ? videoInfoDic.GetValueOrDefault("adaptive_fmts") : null;
+                    var muxedStreamInfosJson =
+                        !isLiveStream ? playerResponseJson.SelectToken("streamingData.formats") : null;
+                    var adaptiveStreamInfosJson =
+                        !isLiveStream ? playerResponseJson.SelectToken("streamingData.adaptiveFormats") : null;
 
                     return new PlayerConfiguration(playerSourceUrl, dashManifestUrl, hlsManifestUrl, muxedStreamInfosUrlEncoded,
-                        adaptiveStreamInfosUrlEncoded, validUntil);
+                        adaptiveStreamInfosUrlEncoded, muxedStreamInfosJson, adaptiveStreamInfosJson, validUntil);
                 }
 
                 // If the video requires purchase - throw (approach one)
                 {
                     var previewVideoId = playerResponseJson
                         .SelectToken("playabilityStatus.errorScreen.playerLegacyDesktopYpcTrailerRenderer.trailerVideoId")?.Value<string>();
-                    if (!previewVideoId.IsNullOrWhiteSpace())
+                    if (!string.IsNullOrWhiteSpace(previewVideoId))
                     {
                         throw new VideoRequiresPurchaseException(videoId, previewVideoId,
                             $"Video [{videoId}] is unplayable because it requires purchase.");
@@ -135,7 +138,7 @@ namespace YoutubeExplode
                 {
                     var previewVideoInfoRaw = playerResponseJson.SelectToken("playabilityStatus.errorScreen.ypcTrailerRenderer.playerVars")
                         ?.Value<string>();
-                    if (!previewVideoInfoRaw.IsNullOrWhiteSpace())
+                    if (!string.IsNullOrWhiteSpace(previewVideoInfoRaw))
                     {
                         var previewVideoInfoDic = Url.SplitQuery(previewVideoInfoRaw);
                         var previewVideoId = previewVideoInfoDic.GetValueOrDefault("video_id");
@@ -159,10 +162,10 @@ namespace YoutubeExplode
                         Regex.Match(s,
                                 @"ytplayer\.config = (?<Json>\{[^\{\}]*(((?<Open>\{)[^\{\}]*)+((?<Close-Open>\})[^\{\}]*)+)*(?(Open)(?!))\})")
                             .Groups["Json"].Value)
-                    .FirstOrDefault(s => !s.IsNullOrWhiteSpace());
+                    .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s));
 
                 // If player config is not available - throw
-                if (playerConfigRaw.IsNullOrWhiteSpace())
+                if (string.IsNullOrWhiteSpace(playerConfigRaw))
                 {
                     var errorReason = videoWatchPageHtml.GetElementById("unavailable-message")?.GetInnerText().Trim();
                     throw new VideoUnplayableException(videoId, $"Video [{videoId}] is unplayable. Reason: {errorReason}");
@@ -194,9 +197,13 @@ namespace YoutubeExplode
                     !isLiveStream ? playerConfigJson.SelectToken("args.url_encoded_fmt_stream_map")?.Value<string>() : null;
                 var adaptiveStreamInfosUrlEncoded =
                     !isLiveStream ? playerConfigJson.SelectToken("args.adaptive_fmts")?.Value<string>() : null;
+                var muxedStreamInfosJson =
+                    !isLiveStream ? playerResponseJson.SelectToken("streamingData.formats") : null;
+                var adaptiveStreamInfosJson =
+                    !isLiveStream ? playerResponseJson.SelectToken("streamingData.adaptiveFormats") : null;
 
                 return new PlayerConfiguration(playerSourceUrl, dashManifestUrl, hlsManifestUrl, muxedStreamInfosUrlEncoded,
-                    adaptiveStreamInfosUrlEncoded, validUntil);
+                    adaptiveStreamInfosUrlEncoded, muxedStreamInfosJson, adaptiveStreamInfosJson, validUntil);
             }
         }
 
@@ -213,7 +220,7 @@ namespace YoutubeExplode
             var deciphererFuncName = Regex.Match(raw,
                 @"(\w+)=function\(\w+\){(\w+)=\2\.split\(\x22{2}\);.*?return\s+\2\.join\(\x22{2}\)}").Groups[1].Value;
 
-            if (deciphererFuncName.IsNullOrWhiteSpace())
+            if (string.IsNullOrWhiteSpace(deciphererFuncName))
             {
                 throw new UnrecognizedStructureException(
                     "Could not find signature decipherer function name. Please report this issue on GitHub.");
@@ -223,7 +230,7 @@ namespace YoutubeExplode
             var deciphererFuncBody = Regex.Match(raw,
                 @"(?!h\.)" + Regex.Escape(deciphererFuncName) + @"=function\(\w+\)\{(.*?)\}", RegexOptions.Singleline).Groups[1].Value;
 
-            if (deciphererFuncBody.IsNullOrWhiteSpace())
+            if (string.IsNullOrWhiteSpace(deciphererFuncBody))
             {
                 throw new UnrecognizedStructureException(
                     "Could not find signature decipherer function body. Please report this issue on GitHub.");
@@ -249,7 +256,7 @@ namespace YoutubeExplode
             {
                 // Get the name of the function called in this statement
                 var calledFuncName = Regex.Match(statement, @"\w+(?:.|\[)(\""?\w+(?:\"")?)\]?\(").Groups[1].Value;
-                if (calledFuncName.IsNullOrWhiteSpace())
+                if (string.IsNullOrWhiteSpace(calledFuncName))
                     continue;
 
                 // Slice
@@ -279,8 +286,6 @@ namespace YoutubeExplode
         /// <inheritdoc />
         public async Task<Video> GetVideoAsync(string videoId)
         {
-            videoId.GuardNotNull(nameof(videoId));
-
             if (!ValidateVideoId(videoId))
                 throw new ArgumentException($"Invalid YouTube video ID [{videoId}].", nameof(videoId));
 
@@ -301,7 +306,7 @@ namespace YoutubeExplode
             var videoAuthor = playerResponseJson.SelectToken("videoDetails.author").Value<string>();
             var videoTitle = playerResponseJson.SelectToken("videoDetails.title").Value<string>();
             var videoDuration = TimeSpan.FromSeconds(playerResponseJson.SelectToken("videoDetails.lengthSeconds").Value<double>());
-            var videoKeywords = playerResponseJson.SelectToken("videoDetails.keywords").EmptyIfNull().Values<string>().ToArray();
+            var videoKeywords = playerResponseJson.SelectToken("videoDetails.keywords")?.Values<string>().ToArray() ?? new string[0];
             var videoDescription = playerResponseJson.SelectToken("videoDetails.shortDescription").Value<string>();
             var videoViewCount = playerResponseJson.SelectToken("videoDetails.viewCount")?.Value<long>() ?? 0; // some videos have no views
 
@@ -316,13 +321,13 @@ namespace YoutubeExplode
             var videoLikeCountRaw = videoWatchPageHtml.GetElementsByClassName("like-button-renderer-like-button")
                 .FirstOrDefault()?.GetInnerText().StripNonDigit();
 
-            var videoLikeCount = !videoLikeCountRaw.IsNullOrWhiteSpace() ? videoLikeCountRaw.ParseLong() : 0;
+            var videoLikeCount = !string.IsNullOrWhiteSpace(videoLikeCountRaw) ? videoLikeCountRaw.ParseLong() : 0;
 
             // Extract dislike count
             var videoDislikeCountRaw = videoWatchPageHtml.GetElementsByClassName("like-button-renderer-dislike-button")
                 .FirstOrDefault()?.GetInnerText().StripNonDigit();
 
-            var videoDislikeCount = !videoDislikeCountRaw.IsNullOrWhiteSpace() ? videoDislikeCountRaw.ParseLong() : 0;
+            var videoDislikeCount = !string.IsNullOrWhiteSpace(videoDislikeCountRaw) ? videoDislikeCountRaw.ParseLong() : 0;
 
             // Create statistics and thumbnails
             var statistics = new Statistics(videoViewCount, videoLikeCount, videoDislikeCount);
@@ -335,8 +340,6 @@ namespace YoutubeExplode
         /// <inheritdoc />
         public async Task<Channel> GetVideoAuthorChannelAsync(string videoId)
         {
-            videoId.GuardNotNull(nameof(videoId));
-
             if (!ValidateVideoId(videoId))
                 throw new ArgumentException($"Invalid YouTube video ID [{videoId}].", nameof(videoId));
 
@@ -362,8 +365,6 @@ namespace YoutubeExplode
         /// <inheritdoc />
         public async Task<MediaStreamInfoSet> GetVideoMediaStreamInfosAsync(string videoId)
         {
-            videoId.GuardNotNull(nameof(videoId));
-
             if (!ValidateVideoId(videoId))
                 throw new ArgumentException($"Invalid YouTube video ID [{videoId}].", nameof(videoId));
 
@@ -376,152 +377,320 @@ namespace YoutubeExplode
             var videoStreamInfoMap = new Dictionary<int, VideoStreamInfo>();
 
             // Get muxed stream infos
-            var muxedStreamInfoDics = playerConfiguration.MuxedStreamInfosUrlEncoded.EmptyIfNull().Split(",").Select(Url.SplitQuery);
-            foreach (var streamInfoDic in muxedStreamInfoDics)
+            var muxedStreamInfoDics = playerConfiguration.MuxedStreamInfosUrlEncoded?.Split(",").Select(Url.SplitQuery);
+            if (muxedStreamInfoDics != null)
             {
-                // Extract info
-                var itag = streamInfoDic["itag"].ParseInt();
-                var url = streamInfoDic["url"];
-
-                // Decipher signature if needed
-                var signature = streamInfoDic.GetValueOrDefault("s");
-                if (!signature.IsNullOrWhiteSpace())
+                foreach (var streamInfoDic in muxedStreamInfoDics)
                 {
-                    // Get cipher operations (cached)
-                    var cipherOperations = await GetCipherOperationsAsync(playerConfiguration.PlayerSourceUrl).ConfigureAwait(false);
+                    // Extract info
+                    var itag = streamInfoDic["itag"].ParseInt();
+                    var url = streamInfoDic["url"];
 
-                    // Decipher signature
-                    signature = cipherOperations.Decipher(signature);
+                    // Decipher signature if needed
+                    var signature = streamInfoDic.GetValueOrDefault("s");
+                    if (!string.IsNullOrWhiteSpace(signature) && !string.IsNullOrWhiteSpace(playerConfiguration.PlayerSourceUrl))
+                    {
+                        // Get cipher operations (cached)
+                        var cipherOperations = await GetCipherOperationsAsync(playerConfiguration.PlayerSourceUrl).ConfigureAwait(false);
 
-                    // Set the corresponding parameter in the URL
-                    var signatureParameter = streamInfoDic.GetValueOrDefault("sp") ?? "signature";
-                    url = Url.SetQueryParameter(url, signatureParameter, signature);
-                }
+                        // Decipher signature
+                        signature = cipherOperations.Decipher(signature);
 
-                // Try to extract content length, otherwise get it manually
-                var contentLength = Regex.Match(url, @"clen=(\d+)").Groups[1].Value.ParseLongOrDefault();
-                if (contentLength <= 0)
-                {
-                    // Send HEAD request and get content length
-                    contentLength = await _httpClient.GetContentLengthAsync(url, false).ConfigureAwait(false) ?? 0;
+                        // Set the corresponding parameter in the URL
+                        var signatureParameter = streamInfoDic.GetValueOrDefault("sp") ?? "signature";
+                        url = Url.SetQueryParameter(url, signatureParameter, signature);
+                    }
 
-                    // If content length is still not available - stream is gone or faulty
+                    // Try to extract content length, otherwise get it manually
+                    var contentLength = Regex.Match(url, @"clen=(\d+)").Groups[1].Value.ParseLongOrDefault();
                     if (contentLength <= 0)
-                        continue;
+                    {
+                        // Send HEAD request and get content length
+                        contentLength = await _httpClient.GetContentLengthAsync(url, false).ConfigureAwait(false) ?? 0;
+
+                        // If content length is still not available - stream is gone or faulty
+                        if (contentLength <= 0)
+                            continue;
+                    }
+
+                    // Extract container
+                    var containerRaw = streamInfoDic["type"].SubstringUntil(";").SubstringAfter("/");
+                    var container = Heuristics.ContainerFromString(containerRaw);
+
+                    // Extract audio encoding
+                    var audioEncodingRaw = streamInfoDic["type"].SubstringAfter("codecs=\"").SubstringUntil("\"").Split(", ").Last();
+                    var audioEncoding = Heuristics.AudioEncodingFromString(audioEncodingRaw);
+
+                    // Extract video encoding
+                    var videoEncodingRaw = streamInfoDic["type"].SubstringAfter("codecs=\"").SubstringUntil("\"").Split(", ").First();
+                    var videoEncoding = Heuristics.VideoEncodingFromString(videoEncodingRaw);
+
+                    // Determine video quality from itag
+                    var videoQuality = Heuristics.VideoQualityFromItag(itag);
+
+                    // Determine video quality label from video quality
+                    var videoQualityLabel = Heuristics.VideoQualityToLabel(videoQuality);
+
+                    // Determine video resolution from video quality
+                    var resolution = Heuristics.VideoQualityToResolution(videoQuality);
+
+                    // Add to list
+                    muxedStreamInfoMap[itag] = new MuxedStreamInfo(itag, url, container, contentLength, audioEncoding, videoEncoding,
+                        videoQualityLabel, videoQuality, resolution);
                 }
+            }
 
-                // Extract container
-                var containerRaw = streamInfoDic["type"].SubstringUntil(";").SubstringAfter("/");
-                var container = Heuristics.ContainerFromString(containerRaw);
+            if (playerConfiguration.MuxedStreamInfosJson != null)
+            {
+                foreach (var streamInfoJson in playerConfiguration.MuxedStreamInfosJson)
+                {
+                    // Extract info
+                    var itag = streamInfoJson.SelectToken("itag").Value<int>();
+                    var url = streamInfoJson.SelectToken("url")?.Value<string>();
 
-                // Extract audio encoding
-                var audioEncodingRaw = streamInfoDic["type"].SubstringAfter("codecs=\"").SubstringUntil("\"").Split(", ").Last();
-                var audioEncoding = Heuristics.AudioEncodingFromString(audioEncodingRaw);
+                    // Decipher signature if needed
+                    if (string.IsNullOrWhiteSpace(url) && !string.IsNullOrWhiteSpace(playerConfiguration.PlayerSourceUrl))
+                    {
+                        var cipher = streamInfoJson.SelectToken("cipher").Value<string>();
+                        var cipherDic = Url.SplitQuery(cipher);
 
-                // Extract video encoding
-                var videoEncodingRaw = streamInfoDic["type"].SubstringAfter("codecs=\"").SubstringUntil("\"").Split(", ").First();
-                var videoEncoding = Heuristics.VideoEncodingFromString(videoEncodingRaw);
+                        url = cipherDic["url"];
+                        var signature = cipherDic["s"];
+                        
+                        // Get cipher operations (cached)
+                        var cipherOperations = await GetCipherOperationsAsync(playerConfiguration.PlayerSourceUrl).ConfigureAwait(false);
 
-                // Determine video quality from itag
-                var videoQuality = Heuristics.VideoQualityFromItag(itag);
+                        // Decipher signature
+                        signature = cipherOperations.Decipher(signature);
 
-                // Determine video quality label from video quality
-                var videoQualityLabel = Heuristics.VideoQualityToLabel(videoQuality);
+                        // Set the corresponding parameter in the URL
+                        var signatureParameter = cipherDic.GetValueOrDefault("sp") ?? "signature";
+                        url = Url.SetQueryParameter(url, signatureParameter, signature);
+                    }
 
-                // Determine video resolution from video quality
-                var resolution = Heuristics.VideoQualityToResolution(videoQuality);
+                    // Try to extract content length, otherwise get it manually
+                    var contentLength = streamInfoJson.SelectToken("contentLength")?.Value<long>() ?? -1;
 
-                // Add to list
-                muxedStreamInfoMap[itag] = new MuxedStreamInfo(itag, url, container, contentLength, audioEncoding, videoEncoding,
-                    videoQualityLabel, videoQuality, resolution);
+                    if (contentLength <= 0)
+                    {
+                        contentLength = Regex.Match(url, @"clen=(\d+)").Groups[1].Value.ParseLongOrDefault();
+                    }
+
+                    if (contentLength <= 0)
+                    {
+                        // Send HEAD request and get content length
+                        contentLength = await _httpClient.GetContentLengthAsync(url, false).ConfigureAwait(false) ?? 0;
+
+                        // If content length is still not available - stream is gone or faulty
+                        if (contentLength <= 0)
+                            continue;
+                    }
+
+                    // Extract container
+                    var containerRaw = streamInfoJson.SelectToken("mimeType").Value<string>().SubstringUntil(";").SubstringAfter("/");
+                    var container = Heuristics.ContainerFromString(containerRaw);
+
+                    // Extract audio encoding
+                    var audioEncodingRaw = streamInfoJson.SelectToken("mimeType").Value<string>().SubstringAfter("codecs=\"").SubstringUntil("\"").Split(", ").Last();
+                    var audioEncoding = Heuristics.AudioEncodingFromString(audioEncodingRaw);
+
+                    // Extract video encoding
+                    var videoEncodingRaw = streamInfoJson.SelectToken("mimeType").Value<string>().SubstringAfter("codecs=\"").SubstringUntil("\"").Split(", ").First();
+                    var videoEncoding = Heuristics.VideoEncodingFromString(videoEncodingRaw);
+
+                    // Determine video quality from itag
+                    var videoQuality = Heuristics.VideoQualityFromItag(itag);
+
+                    // Determine video quality label from video quality
+                    var videoQualityLabel = Heuristics.VideoQualityToLabel(videoQuality);
+
+                    // Determine video resolution from video quality
+                    var resolution = Heuristics.VideoQualityToResolution(videoQuality);
+
+                    // Add to list
+                    muxedStreamInfoMap[itag] = new MuxedStreamInfo(itag, url, container, contentLength, audioEncoding, videoEncoding,
+                        videoQualityLabel, videoQuality, resolution);
+                }
             }
 
             // Get adaptive stream infos
-            var adaptiveStreamInfoDics = playerConfiguration.AdaptiveStreamInfosUrlEncoded.EmptyIfNull().Split(",").Select(Url.SplitQuery);
-            foreach (var streamInfoDic in adaptiveStreamInfoDics)
+            var adaptiveStreamInfoDics = playerConfiguration.AdaptiveStreamInfosUrlEncoded?.Split(",").Select(Url.SplitQuery);
+            if (adaptiveStreamInfoDics != null)
             {
-                // Extract info
-                var itag = streamInfoDic["itag"].ParseInt();
-                var url = streamInfoDic["url"];
-                var bitrate = streamInfoDic["bitrate"].ParseLong();
-
-                // Decipher signature if needed
-                var signature = streamInfoDic.GetValueOrDefault("s");
-                if (!signature.IsNullOrWhiteSpace())
+                foreach (var streamInfoDic in adaptiveStreamInfoDics)
                 {
-                    // Get cipher operations (cached)
-                    var cipherOperations = await GetCipherOperationsAsync(playerConfiguration.PlayerSourceUrl).ConfigureAwait(false);
+                    // Extract info
+                    var itag = streamInfoDic["itag"].ParseInt();
+                    var url = streamInfoDic["url"];
+                    var bitrate = streamInfoDic["bitrate"].ParseLong();
 
-                    // Decipher signature
-                    signature = cipherOperations.Decipher(signature);
+                    // Decipher signature if needed
+                    var signature = streamInfoDic.GetValueOrDefault("s");
+                    if (!string.IsNullOrWhiteSpace(signature) && !string.IsNullOrWhiteSpace(playerConfiguration.PlayerSourceUrl))
+                    {
+                        // Get cipher operations (cached)
+                        var cipherOperations = await GetCipherOperationsAsync(playerConfiguration.PlayerSourceUrl).ConfigureAwait(false);
 
-                    // Set the corresponding parameter in the URL
-                    var signatureParameter = streamInfoDic.GetValueOrDefault("sp") ?? "signature";
-                    url = Url.SetQueryParameter(url, signatureParameter, signature);
-                }
+                        // Decipher signature
+                        signature = cipherOperations.Decipher(signature);
 
-                // Try to extract content length, otherwise get it manually
-                var contentLength = streamInfoDic.GetValueOrDefault("clen").ParseLongOrDefault();
-                if (contentLength <= 0)
-                {
-                    // Send HEAD request and get content length
-                    contentLength = await _httpClient.GetContentLengthAsync(url, false).ConfigureAwait(false) ?? 0;
+                        // Set the corresponding parameter in the URL
+                        var signatureParameter = streamInfoDic.GetValueOrDefault("sp") ?? "signature";
+                        url = Url.SetQueryParameter(url, signatureParameter, signature);
+                    }
 
-                    // If content length is still not available - stream is gone or faulty
+                    // Try to extract content length, otherwise get it manually
+                    var contentLength = streamInfoDic.GetValueOrDefault("clen").ParseLongOrDefault();
                     if (contentLength <= 0)
-                        continue;
+                    {
+                        // Send HEAD request and get content length
+                        contentLength = await _httpClient.GetContentLengthAsync(url, false).ConfigureAwait(false) ?? 0;
+
+                        // If content length is still not available - stream is gone or faulty
+                        if (contentLength <= 0)
+                            continue;
+                    }
+
+                    // Extract container
+                    var containerRaw = streamInfoDic["type"].SubstringUntil(";").SubstringAfter("/");
+                    var container = Heuristics.ContainerFromString(containerRaw);
+
+                    // If audio-only
+                    if (streamInfoDic["type"].StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Extract audio encoding
+                        var audioEncodingRaw = streamInfoDic["type"].SubstringAfter("codecs=\"").SubstringUntil("\"");
+                        var audioEncoding = Heuristics.AudioEncodingFromString(audioEncodingRaw);
+
+                        // Add stream
+                        audioStreamInfoMap[itag] = new AudioStreamInfo(itag, url, container, contentLength, bitrate, audioEncoding);
+                    }
+                    // If video-only
+                    else
+                    {
+                        // Extract video encoding
+                        var videoEncodingRaw = streamInfoDic["type"].SubstringAfter("codecs=\"").SubstringUntil("\"");
+                        var videoEncoding = !videoEncodingRaw.Equals("unknown", StringComparison.OrdinalIgnoreCase)
+                            ? Heuristics.VideoEncodingFromString(videoEncodingRaw)
+                            : VideoEncoding.Av1; // HACK: issue 246
+
+                        // Extract video quality label and video quality
+                        var videoQualityLabel = streamInfoDic["quality_label"];
+                        var videoQuality = Heuristics.VideoQualityFromLabel(videoQualityLabel);
+
+                        // Extract resolution
+                        var width = streamInfoDic["size"].SubstringUntil("x").ParseInt();
+                        var height = streamInfoDic["size"].SubstringAfter("x").ParseInt();
+                        var resolution = new VideoResolution(width, height);
+
+                        // Extract framerate
+                        var framerate = streamInfoDic["fps"].ParseInt();
+
+                        // Add to list
+                        videoStreamInfoMap[itag] = new VideoStreamInfo(itag, url, container, contentLength, bitrate, videoEncoding,
+                            videoQualityLabel, videoQuality, resolution, framerate);
+                    }
                 }
+            }
 
-                // Extract container
-                var containerRaw = streamInfoDic["type"].SubstringUntil(";").SubstringAfter("/");
-                var container = Heuristics.ContainerFromString(containerRaw);
-
-                // If audio-only
-                if (streamInfoDic["type"].StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
+            if (playerConfiguration.AdaptiveStreamInfosJson != null)
+            {
+                foreach (var streamInfoJson in playerConfiguration.AdaptiveStreamInfosJson)
                 {
-                    // Extract audio encoding
-                    var audioEncodingRaw = streamInfoDic["type"].SubstringAfter("codecs=\"").SubstringUntil("\"");
-                    var audioEncoding = Heuristics.AudioEncodingFromString(audioEncodingRaw);
+                    // Extract info
+                    var itag = streamInfoJson.SelectToken("itag").Value<int>();
+                    var url = streamInfoJson.SelectToken("url")?.Value<string>();
+                    var bitrate = streamInfoJson.SelectToken("bitrate").Value<long>();
 
-                    // Add stream
-                    audioStreamInfoMap[itag] = new AudioStreamInfo(itag, url, container, contentLength, bitrate, audioEncoding);
-                }
-                // If video-only
-                else
-                {
-                    // Extract video encoding
-                    var videoEncodingRaw = streamInfoDic["type"].SubstringAfter("codecs=\"").SubstringUntil("\"");
-                    var videoEncoding = !videoEncodingRaw.Equals("unknown", StringComparison.OrdinalIgnoreCase)
-                        ? Heuristics.VideoEncodingFromString(videoEncodingRaw)
-                        : VideoEncoding.Av1; // HACK: issue 246
+                    // Decipher signature if needed
+                    if (string.IsNullOrWhiteSpace(url) && !string.IsNullOrWhiteSpace(playerConfiguration.PlayerSourceUrl))
+                    {
+                        var cipher = streamInfoJson.SelectToken("cipher").Value<string>();
+                        var cipherDic = Url.SplitQuery(cipher);
 
-                    // Extract video quality label and video quality
-                    var videoQualityLabel = streamInfoDic["quality_label"];
-                    var videoQuality = Heuristics.VideoQualityFromLabel(videoQualityLabel);
+                        url = cipherDic["url"];
+                        var signature = cipherDic["s"];
 
-                    // Extract resolution
-                    var width = streamInfoDic["size"].SubstringUntil("x").ParseInt();
-                    var height = streamInfoDic["size"].SubstringAfter("x").ParseInt();
-                    var resolution = new VideoResolution(width, height);
+                        // Get cipher operations (cached)
+                        var cipherOperations = await GetCipherOperationsAsync(playerConfiguration.PlayerSourceUrl).ConfigureAwait(false);
 
-                    // Extract framerate
-                    var framerate = streamInfoDic["fps"].ParseInt();
+                        // Decipher signature
+                        signature = cipherOperations.Decipher(signature);
 
-                    // Add to list
-                    videoStreamInfoMap[itag] = new VideoStreamInfo(itag, url, container, contentLength, bitrate, videoEncoding,
-                        videoQualityLabel, videoQuality, resolution, framerate);
+                        // Set the corresponding parameter in the URL
+                        var signatureParameter = cipherDic.GetValueOrDefault("sp") ?? "signature";
+                        url = Url.SetQueryParameter(url, signatureParameter, signature);
+                    }
+
+                    // Try to extract content length, otherwise get it manually
+                    var contentLength = streamInfoJson.SelectToken("contentLength")?.Value<long>() ?? -1;
+
+                    if (contentLength <= 0)
+                    {
+                        contentLength = Regex.Match(url, @"clen=(\d+)").Groups[1].Value.ParseLongOrDefault();
+                    }
+
+                    if (contentLength <= 0)
+                    {
+                        // Send HEAD request and get content length
+                        contentLength = await _httpClient.GetContentLengthAsync(url, false).ConfigureAwait(false) ?? 0;
+
+                        // If content length is still not available - stream is gone or faulty
+                        if (contentLength <= 0)
+                            continue;
+                    }
+
+                    // Extract container
+                    var containerRaw = streamInfoJson.SelectToken("mimeType").Value<string>().SubstringUntil(";").SubstringAfter("/");
+                    var container = Heuristics.ContainerFromString(containerRaw);
+
+                    // If audio-only
+                    if (streamInfoJson.SelectToken("audioSampleRate") != null)
+                    {
+                        // Extract audio encoding
+                        var audioEncodingRaw = streamInfoJson.SelectToken("mimeType").Value<string>().SubstringAfter("codecs=\"").SubstringUntil("\"");
+                        var audioEncoding = Heuristics.AudioEncodingFromString(audioEncodingRaw);
+
+                        // Add stream
+                        audioStreamInfoMap[itag] = new AudioStreamInfo(itag, url, container, contentLength, bitrate, audioEncoding);
+                    }
+                    // If video-only
+                    else
+                    {
+                        // Extract video encoding
+                        var videoEncodingRaw = streamInfoJson.SelectToken("mimeType").Value<string>().SubstringAfter("codecs=\"").SubstringUntil("\"");
+                        var videoEncoding = !videoEncodingRaw.Equals("unknown", StringComparison.OrdinalIgnoreCase)
+                            ? Heuristics.VideoEncodingFromString(videoEncodingRaw)
+                            : VideoEncoding.Av1; // HACK: issue 246
+
+                        // Extract video quality label and video quality
+                        var videoQualityLabel = streamInfoJson.SelectToken("qualityLabel").Value<string>();
+                        var videoQuality = Heuristics.VideoQualityFromLabel(videoQualityLabel);
+
+                        // Extract resolution
+                        var width = streamInfoJson.SelectToken("width").Value<int>();
+                        var height = streamInfoJson.SelectToken("height").Value<int>();
+                        var resolution = new VideoResolution(width, height);
+
+                        // Extract framerate
+                        var framerate = streamInfoJson.SelectToken("fps").Value<int>();
+
+                        // Add to list
+                        videoStreamInfoMap[itag] = new VideoStreamInfo(itag, url, container, contentLength, bitrate, videoEncoding,
+                            videoQualityLabel, videoQuality, resolution, framerate);
+                    }
                 }
             }
 
             // Get dash manifest
             var dashManifestUrl = playerConfiguration.DashManifestUrl;
-            if (!dashManifestUrl.IsNullOrWhiteSpace())
+            if (!string.IsNullOrWhiteSpace(dashManifestUrl))
             {
                 // Extract signature
                 var signature = Regex.Match(dashManifestUrl, "/s/(.*?)(?:/|$)").Groups[1].Value;
 
                 // Decipher signature if needed
-                if (!signature.IsNullOrWhiteSpace())
+                if (!string.IsNullOrWhiteSpace(signature) && !string.IsNullOrWhiteSpace(playerConfiguration.PlayerSourceUrl))
                 {
                     // Get cipher operations (cached)
                     var cipherOperations = await GetCipherOperationsAsync(playerConfiguration.PlayerSourceUrl).ConfigureAwait(false);
@@ -603,8 +772,6 @@ namespace YoutubeExplode
         /// <inheritdoc />
         public async Task<IReadOnlyList<ClosedCaptionTrackInfo>> GetVideoClosedCaptionTrackInfosAsync(string videoId)
         {
-            videoId.GuardNotNull(nameof(videoId));
-
             if (!ValidateVideoId(videoId))
                 throw new ArgumentException($"Invalid YouTube video ID [{videoId}].", nameof(videoId));
 
@@ -623,7 +790,7 @@ namespace YoutubeExplode
 
             // Get closed caption track infos
             var trackInfos = new List<ClosedCaptionTrackInfo>();
-            foreach (var trackJson in playerResponseJson.SelectToken("..captionTracks").EmptyIfNull())
+            foreach (var trackJson in playerResponseJson.SelectTokens("..captionTracks[*]"))
             {
                 // Get URL
                 var url = trackJson.SelectToken("baseUrl").Value<string>();

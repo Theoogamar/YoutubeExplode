@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using DemoConsole.Internal;
-using YoutubeExplode;
+using YoutubeExplode.DemoConsole.Internal;
 using YoutubeExplode.Models.MediaStreams;
 
-namespace DemoConsole
+namespace YoutubeExplode.DemoConsole
 {
     public static class Program
     {
@@ -12,12 +11,10 @@ namespace DemoConsole
         /// If given a YouTube URL, parses video id from it.
         /// Otherwise returns the same string.
         /// </summary>
-        private static string NormalizeVideoId(string input)
-        {
-            return YoutubeClient.TryParseVideoId(input, out var videoId) 
-                ? videoId
+        private static string NormalizeVideoId(string input) =>
+            YoutubeClient.TryParseVideoId(input, out var videoId) 
+                ? videoId!
                 : input;
-        }
 
         private static async Task MainAsync()
         {
@@ -34,6 +31,11 @@ namespace DemoConsole
 
             // Choose the best muxed stream
             var streamInfo = streamInfoSet.Muxed.WithHighestVideoQuality();
+            if (streamInfo == null)
+            {
+                Console.WriteLine("This videos has no streams");
+                return;
+            }
 
             // Compose file name, based on metadata
             var fileExtension = streamInfo.Container.GetFileExtension();
@@ -45,10 +47,9 @@ namespace DemoConsole
                 await client.DownloadMediaStreamAsync(streamInfo, fileName, progress);
 
             Console.WriteLine($"Video saved to '{fileName}'");
-            Console.ReadKey();
         }
 
-        public static void Main(string[] args)
+        public static void Main()
         {
             // This demo prompts for video ID and downloads one media stream
             // It's intended to be very simple and straight to the point

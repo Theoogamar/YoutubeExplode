@@ -1,3 +1,13 @@
+### v4.7.11 (15-Dec-2019)
+
+- Fixed an issue where `GetVideoMediaStreamInfosAsync` sometimes returned a set without any streams due to recent YouTube changes.
+- Fixed an issue where "my mix" playlists were considered invalid.
+- Added nullable reference type annotations and removed ReSharper annotations.
+
+### v4.7.10 (23-Sep-2019)
+
+- Fixed an issue where `GetVideoMediaStreamInfosAsync` threw an exception due to recent YouTube changes.
+
 ### v4.7.9 (15-Aug-2019)
 
 - Updated signature deciphering to match recent YouTube changes.

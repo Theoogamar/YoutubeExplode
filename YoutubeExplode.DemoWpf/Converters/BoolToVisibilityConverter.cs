@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace DemoWpf.Converters
+namespace YoutubeExplode.DemoWpf.Converters
 {
     [ValueConversion(typeof(bool), typeof(Visibility))]
     public class BoolToVisibilityConverter : IValueConverter
@@ -12,12 +12,12 @@ namespace DemoWpf.Converters
 
         public virtual object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is null)
-                throw new ArgumentNullException(nameof(value));
-
             var falseVisibility = Visibility.Hidden;
             if (parameter is Visibility parameterVisibility)
                 falseVisibility = parameterVisibility;
+
+            if (value is null)
+                return falseVisibility;
 
             var valueBool = (bool) value;
             return valueBool ? Visibility.Visible : falseVisibility;
