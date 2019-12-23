@@ -429,7 +429,7 @@ namespace YoutubeDownloader
             ProgressBar ProgBar = null;
             if (progressBar)
             {
-                Rectangle rect = default(Rectangle);
+                Rectangle rect = default;
                 ProgBar = new ProgressBar();
 
                 //Get bounds of the second colum

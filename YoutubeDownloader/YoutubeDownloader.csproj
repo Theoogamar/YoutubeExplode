@@ -73,6 +73,7 @@
     <Compile Include="CustomBackgroundWorker.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="CustomExtensions.cs" />
     <Compile Include="CustomWebClient.cs">
       <SubType>Component</SubType>
     </Compile>
