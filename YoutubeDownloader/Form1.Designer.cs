@@ -46,7 +46,13 @@
             this.total = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.timer = new System.Windows.Forms.Timer(this.components);
             this.btnAudio = new System.Windows.Forms.Button();
+            this.barFirst = new System.Windows.Forms.TrackBar();
+            this.barLast = new System.Windows.Forms.TrackBar();
+            this.txtFirst = new System.Windows.Forms.Label();
+            this.txtLast = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.Thumbnail)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.barFirst)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.barLast)).BeginInit();
             this.SuspendLayout();
             // 
             // btnPaste
@@ -55,9 +61,9 @@
             this.btnPaste.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnPaste.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnPaste.ForeColor = System.Drawing.SystemColors.Control;
-            this.btnPaste.Location = new System.Drawing.Point(59, 41);
+            this.btnPaste.Location = new System.Drawing.Point(15, 41);
             this.btnPaste.Name = "btnPaste";
-            this.btnPaste.Size = new System.Drawing.Size(106, 34);
+            this.btnPaste.Size = new System.Drawing.Size(159, 39);
             this.btnPaste.TabIndex = 0;
             this.btnPaste.Text = "Paste";
             this.btnPaste.UseVisualStyleBackColor = false;
@@ -148,11 +154,11 @@
             this.btnDownload.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.btnDownload.Enabled = false;
             this.btnDownload.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDownload.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnDownload.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnDownload.ForeColor = System.Drawing.SystemColors.Control;
-            this.btnDownload.Location = new System.Drawing.Point(94, 181);
+            this.btnDownload.Location = new System.Drawing.Point(107, 204);
             this.btnDownload.Name = "btnDownload";
-            this.btnDownload.Size = new System.Drawing.Size(227, 60);
+            this.btnDownload.Size = new System.Drawing.Size(227, 44);
             this.btnDownload.TabIndex = 9;
             this.btnDownload.Text = "Download";
             this.btnDownload.UseVisualStyleBackColor = false;
@@ -179,6 +185,7 @@
             this.total});
             this.listView.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.listView.ForeColor = System.Drawing.SystemColors.Control;
+            this.listView.HideSelection = false;
             this.listView.Location = new System.Drawing.Point(0, 256);
             this.listView.Name = "listView";
             this.listView.Size = new System.Drawing.Size(704, 185);
@@ -220,16 +227,64 @@
             this.btnAudio.UseVisualStyleBackColor = false;
             this.btnAudio.Click += new System.EventHandler(this.btnAudio_Click);
             // 
+            // barFirst
+            // 
+            this.barFirst.Enabled = false;
+            this.barFirst.Location = new System.Drawing.Point(0, 165);
+            this.barFirst.Maximum = 100;
+            this.barFirst.Name = "barFirst";
+            this.barFirst.Size = new System.Drawing.Size(220, 45);
+            this.barFirst.TabIndex = 13;
+            this.barFirst.Scroll += new System.EventHandler(this.barFirst_Scroll);
+            // 
+            // barLast
+            // 
+            this.barLast.Enabled = false;
+            this.barLast.Location = new System.Drawing.Point(229, 165);
+            this.barLast.Maximum = 100;
+            this.barLast.Name = "barLast";
+            this.barLast.Size = new System.Drawing.Size(220, 45);
+            this.barLast.TabIndex = 14;
+            this.barLast.Value = 100;
+            this.barLast.Scroll += new System.EventHandler(this.barLast_Scroll);
+            // 
+            // txtFirst
+            // 
+            this.txtFirst.AutoSize = true;
+            this.txtFirst.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtFirst.ForeColor = System.Drawing.SystemColors.Control;
+            this.txtFirst.Location = new System.Drawing.Point(8, 213);
+            this.txtFirst.Name = "txtFirst";
+            this.txtFirst.Size = new System.Drawing.Size(39, 16);
+            this.txtFirst.TabIndex = 15;
+            this.txtFirst.Text = "00:00";
+            this.txtFirst.Visible = false;
+            // 
+            // txtLast
+            // 
+            this.txtLast.AutoSize = true;
+            this.txtLast.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtLast.ForeColor = System.Drawing.SystemColors.Control;
+            this.txtLast.Location = new System.Drawing.Point(395, 213);
+            this.txtLast.Name = "txtLast";
+            this.txtLast.Size = new System.Drawing.Size(39, 16);
+            this.txtLast.TabIndex = 16;
+            this.txtLast.Text = "00:00";
+            this.txtLast.Visible = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.ClientSize = new System.Drawing.Size(704, 441);
+            this.Controls.Add(this.txtLast);
+            this.Controls.Add(this.txtFirst);
+            this.Controls.Add(this.btnDownload);
+            this.Controls.Add(this.barFirst);
             this.Controls.Add(this.btnAudio);
             this.Controls.Add(this.listView);
             this.Controls.Add(this.txtLoading);
-            this.Controls.Add(this.btnDownload);
             this.Controls.Add(this.comBoxVideo);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);
@@ -238,12 +293,15 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.TxtUrl);
             this.Controls.Add(this.btnPaste);
+            this.Controls.Add(this.barLast);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "Youtube Downloader";
             ((System.ComponentModel.ISupportInitialize)(this.Thumbnail)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.barFirst)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.barLast)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -267,6 +325,10 @@
         private System.Windows.Forms.ColumnHeader total;
         private System.Windows.Forms.Timer timer;
         private System.Windows.Forms.Button btnAudio;
+        private System.Windows.Forms.TrackBar barFirst;
+        private System.Windows.Forms.TrackBar barLast;
+        private System.Windows.Forms.Label txtFirst;
+        private System.Windows.Forms.Label txtLast;
     }
 }
 

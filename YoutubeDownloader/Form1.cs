@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using YoutubeExplode;
 using YoutubeExplode.Models.MediaStreams;
 using NAudio.Wave;
+using NAudio.MediaFoundation;
 using System.Diagnostics;
 
 namespace YoutubeDownloader
@@ -27,14 +28,14 @@ namespace YoutubeDownloader
         // data for downloading video
         private List<string> videoUrls;
 
-        // stop watches for downloading audio
-        private List<Stopwatch> stopwatches = new List<Stopwatch>();
-
         // iterator for the "loading..." animation
         private sbyte iter = -1;
 
         // store the text on audio select button
         private string AudioText;
+
+        // stores the vidoe lenght
+        private TimeSpan duration;
 
         // enum for listView
         private enum subItems
@@ -84,6 +85,10 @@ namespace YoutubeDownloader
                     // Set video tile to text box
                     var video = await client.GetVideoAsync(id);
                     txtBoxVidName.Text = video.Title;
+
+                    // get duration and set the duration
+                    duration = video.Duration;
+                    txtLast.Text = duration.ToString(@"mm\:ss");
                 }
                 catch (Exception ex)
                 {
@@ -114,9 +119,9 @@ namespace YoutubeDownloader
 
                 // add the highest quailty audio to the list
                 if (highest == 0)
-                    btnAudio.Text = "Highest bitrate: " + (int)Audio.Bitrate / 1000 + "kbps .mp3";
+                    btnAudio.Text = $"Highest bitrate: {Audio.Bitrate / 1000}kbps .mp3";
                 else
-                    btnAudio.Text = highest + 1 + "nd Highest bitrate: " + (int)Audio.Bitrate / 1000 + "kbps .mp3";
+                    btnAudio.Text = $"{highest + 1}nd Highest bitrate: {Audio.Bitrate / 1000}kbps .mp3";
 
                 AudioText = btnAudio.Text;
 
@@ -133,8 +138,7 @@ namespace YoutubeDownloader
                 for (int i = 0; i < streamInfo.Muxed.Count; i++)
                 {
                     // add video info to combobox
-                    comBoxVideo.Items.Add("Resolution: " + streamInfo.Muxed[i].VideoQualityLabel + " ." +
-                        streamInfo.Muxed[i].Container);
+                    comBoxVideo.Items.Add($"Resolution: {streamInfo.Muxed[i].VideoQualityLabel} .{streamInfo.Muxed[i].Container}");
 
                     // add download url to string arry
                     videoUrls.Add(streamInfo.Muxed[i].Url);
@@ -161,6 +165,10 @@ namespace YoutubeDownloader
             txtBoxVidName.Enabled = b;
             comBoxVideo.Enabled = b;
             btnDownload.Enabled = b;
+            barFirst.Enabled = b;
+            barLast.Enabled = b;
+            txtFirst.Visible = b;
+            txtLast.Visible = b;
 
             // if disabling UI elements also clear them
             if (!b)
@@ -168,6 +176,10 @@ namespace YoutubeDownloader
                 btnAudio.Text = "";
                 comBoxVideo.Items.Clear();
                 txtBoxVidName.Text = "";
+                txtFirst.Text = "00:00";
+                txtLast.Text = "00:00";
+                barFirst.Value = 0;
+                barLast.Value = 100;
             }
         }
 
@@ -180,7 +192,10 @@ namespace YoutubeDownloader
             // clear the picture box
             Thumbnail.Image = null;
 
-            // make sure the file isn't the same as ones being downloading or get IO exception
+            // clear pasted text
+            TxtUrl.Text = "";
+
+            // make sure the file isn't the same as ones being downloading or get an IO exception
             for (int i = 0; i < listView.Items.Count; i++)
             {
                 // checking if the downloading files isn't the one trying to be downloaded
@@ -195,25 +210,27 @@ namespace YoutubeDownloader
                 }
             }
 
+            AudioText = "";
+
             // if the user picked to download audio or video
             if (btnAudio.Text != "")
             {
-                AudioText = "";
-
-                // adds a donwload item to the listview
-                LvAddItem(ref listView, fileName, false, "a");
-
-                // reset the video settings in the UI
-                toggleThings(false);
-                Refresh();
-
-                // adds a stop watch for the user
-                var watch = new Stopwatch();
-                watch.Start();
-                stopwatches.Add(watch);
-
                 using (CustomBackgroundWorker Worker = new CustomBackgroundWorker())
                 {
+                    // copy the cut values off the UI thread
+                    int first = barFirst.Value;
+                    int last = barLast.Maximum - barLast.Value;
+
+                    // reset the video settings in the UI
+                    toggleThings(false);
+                    Refresh();
+
+                    // adds a donwload item to the listview
+                    Worker.Progbar = LvAddItem(ref listView, fileName, true, "a");
+
+                    // the position in the listView to put the percentage downloaded
+                    Worker.Index = listView.Items.Count - 1;
+
                     // starting the thread
                     Worker.DoWork += worker_DoWork;
                     Worker.RunWorkerCompleted += worker_RunWorkerCompleted;
@@ -227,39 +244,91 @@ namespace YoutubeDownloader
                             // download the auido from url
                             using (var reader = new MediaFoundationReader(audioUrl))
                             {
+                                // set up the encoder for mp3 file formate
+                                var mediaType = MediaFoundationEncoder.SelectMediaType(AudioSubtypes.MFAudioFormat_MP3, reader.WaveFormat, Bitrate);
+                                if (mediaType == null) throw new InvalidOperationException("No suitable MP3 encoders available");
+                                var audio = new MediaFoundationEncoder(mediaType);
+
+                                audio.LoadProgressChanged += encoder_LoadProgressChanged;
+                                audio.LoadComplete += encoder_LoadComplete;
+
                                 // encode it to mp3
-                                MediaFoundationEncoder.EncodeToMp3(reader, FilePath + fileName + ".mp3", Bitrate);
+                                audio.Encode($"{FilePath}{fileName}.mp3", reader, first, last);
+
+                                void encoder_LoadProgressChanged(object obj, LoadProgressChangedEventArgs evt)
+                                {
+                                    // set current worker
+                                    var customWorker = o as CustomBackgroundWorker;
+
+                                    int index = 0;
+
+                                    // Running on the UI thread
+                                    listView.Invoke((MethodInvoker)delegate {
+
+                                        // searchs for the currents index
+                                        index = getIndexByName(customWorker.Name);
+
+                                        // update the bytes received in the listView
+                                        listView.Items[customWorker.Index].SubItems[(int)subItems.Total].Text =
+                                            $"{evt.TimeEncoded.ToString(@"mm\:ss")} / {evt.TotalTimeToEncode.ToString(@"mm\:ss")}";
+                                    });
+
+                                    // Running on the UI thread
+                                    customWorker.Progbar.Invoke((MethodInvoker)delegate {
+
+                                        // set the progress on the progress bar
+                                        customWorker.Progbar.Value = evt.ProgressPercentage;
+
+                                        if (index != customWorker.Index)
+                                        {
+                                            customWorker.Index = index;
+
+                                            // move the progress bar down one
+                                            customWorker.Progbar.Top -= 18;
+                                        }
+                                    });
+                                }
+
+                                void encoder_LoadComplete(object obj, EventArgs evt)
+                                {
+                                    audio.LoadProgressChanged -= encoder_LoadProgressChanged;
+                                    audio.LoadComplete -= encoder_LoadComplete;
+                                }
                             }
                         }
                         catch (Exception ex)
                         {
                             // if something messes up tell the user and return
-                            txtLoading.Text = ex.Message;
-                            txtLoading.Visible = true;
+                            MessageBox.Show(ex.Message);
                             return;
                         }
                     }
 
                     void worker_RunWorkerCompleted(object o, RunWorkerCompletedEventArgs ev)
                     {
-                        var worker = o as CustomBackgroundWorker;
+                        var customWorker = o as CustomBackgroundWorker;
+
+                        // remove the progress bar
+                        customWorker.Progbar.Dispose();
 
                         // get the index of a listview item by name
-                        int index = getIndexByName(worker.Name);
+                        int index = getIndexByName(customWorker.Name);
 
                         // remove the listview item and stopwatch by the index
                         listView.Items.RemoveAt(index);
-                        stopwatches.RemoveAt(index);
+                        //stopwatches.RemoveAt(index);
 
                         // remove events
-                        worker.DoWork -= worker_DoWork;
-                        worker.RunWorkerCompleted -= worker_RunWorkerCompleted;
+                        customWorker.DoWork -= worker_DoWork;
+                        customWorker.RunWorkerCompleted -= worker_RunWorkerCompleted;
                     }
                 }
             }
             else if (comBoxVideo.SelectedIndex != -1)
             {
-                AudioText = "";
+                // reset the video settings in the UI
+                toggleThings(false);
+                Refresh();
 
                 // get the video codec
                 string item = comBoxVideo.Items[comBoxVideo.SelectedIndex] as string;
@@ -273,10 +342,6 @@ namespace YoutubeDownloader
                 {
                     // adds a download item to the listview
                     web.Progbar = LvAddItem(ref listView, fileName, true, "v");
-
-                    // reset the video settings in the UI
-                    toggleThings(false);
-                    Refresh();
 
                     // add events
                     web.DownloadProgressChanged += web_DownloadProgressChanged;
@@ -311,7 +376,7 @@ namespace YoutubeDownloader
                         }
 
                         // update the bytes received in the listView
-                        listView.Items[customWebClient.Index].SubItems[(int)subItems.Total].Text = 
+                        listView.Items[customWebClient.Index].SubItems[(int)subItems.Total].Text =
                             (ev.BytesReceived / 1024f / 1042f).ToString("00.00") + " / " +
                             (ev.TotalBytesToReceive / 1024f / 1024f).ToString("00.00") + "MB";
                     }
@@ -334,9 +399,6 @@ namespace YoutubeDownloader
                     }
                 }
             }
-            // clear out stopWatch list (when the listView is empty)
-            if (listView.Items.Count == 0)
-                stopwatches = new List<Stopwatch>();
 
             // getting the index of a listview item by name
             int getIndexByName(string name)
@@ -367,7 +429,7 @@ namespace YoutubeDownloader
                     iter++;
                     break;
                 case 3:
-                    txtLoading.Text = "Loading...";
+                    txtLoading.Text = @"Loading...";
                     iter++;
                     break;
                 case 4:
@@ -379,12 +441,6 @@ namespace YoutubeDownloader
                     iter = 0;
                     break;
             }
-
-            // set the elapsed seconds when downloading audio to the 3rd colum under "Total" in the listView
-            int j = 0;
-            for (int i = 0; i < listView.Items.Count; i++)
-                if (listView.Items[i].SubItems[(int)subItems.Media].Text == "a")
-                    listView.Items[i].SubItems[(int)subItems.Total].Text = stopwatches[j++].Elapsed.TotalSeconds + "s";
         }
 
         // so the user can't selected audio and video it's one or the other
@@ -417,7 +473,7 @@ namespace YoutubeDownloader
             item.SubItems.Add(@"¯\_(ツ)_/¯");
 
             // Total colum
-            item.SubItems.Add("00.00");
+            item.SubItems.Add("00 / 00");
 
             // is audio or video
             item.SubItems.Add(media);
@@ -425,22 +481,18 @@ namespace YoutubeDownloader
             // add it all to the listview
             listView.Items.Add(item);
 
-            // if you want a progress bar else just return null
-            ProgressBar ProgBar = null;
-            if (progressBar)
-            {
-                Rectangle rect = default;
-                ProgBar = new ProgressBar();
+            // add progress bar
+            Rectangle rect = default;
+            ProgressBar ProgBar = new ProgressBar();
 
-                //Get bounds of the second colum
-                rect = listView.Items[listView.Items.Count - 1].SubItems[(int)subItems.Progress].Bounds;
+            // Get bounds of the second colum
+            rect = listView.Items[listView.Items.Count - 1].SubItems[(int)subItems.Progress].Bounds;
 
-                // parent progressBar to the listView
-                ProgBar.Parent = listView;
+            // parent progressBar to the listView
+            ProgBar.Parent = listView;
 
-                //Put Prog bar In listView 
-                ProgBar.SetBounds(rect.X, rect.Y, rect.Width, rect.Height);
-            }
+            // Put Prog bar In listView 
+            ProgBar.SetBounds(rect.X, rect.Y, rect.Width, rect.Height);
 
             return ProgBar;
         }
@@ -450,6 +502,16 @@ namespace YoutubeDownloader
         {
             e.Cancel = true;
             e.NewWidth = listView.Columns[e.ColumnIndex].Width;
+        }
+
+        private void barFirst_Scroll(object sender, EventArgs e)
+        {
+            txtFirst.Text = $"{TimeSpan.FromSeconds(barFirst.Value).ToString(@"mm\:ss")}";
+        }
+
+        private void barLast_Scroll(object sender, EventArgs e)
+        {
+            txtLast.Text = $"{(duration - TimeSpan.FromSeconds(barLast.Maximum - barLast.Value)).ToString(@"mm\:ss")}";
         }
     }
 }
