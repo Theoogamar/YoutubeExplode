@@ -1,18 +1,22 @@
 ﻿<Window
     x:Class="YoutubeExplode.DemoWpf.Views.MainWindow"
+    x:Name="Root"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:converters="clr-namespace:YoutubeExplode.DemoWpf.Converters"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:viewModels="clr-namespace:YoutubeExplode.DemoWpf.ViewModels"
     Title="YoutubeExplode Demo"
     Width="700"
     Height="610"
     Background="{DynamicResource MaterialDesignPaper}"
-    DataContext="{Binding MainViewModel, Source={StaticResource Locator}}"
     FocusManager.FocusedElement="{Binding ElementName=QueryTextBox}"
     Icon="/YoutubeExplode.DemoWpf;component/favicon.ico"
     Style="{DynamicResource MaterialDesignRoot}"
     WindowStartupLocation="CenterScreen">
+    <Window.DataContext>
+        <viewModels:MainViewModel />
+    </Window.DataContext>
     <DockPanel>
         <!--  Toolbar  -->
         <Border
@@ -32,6 +36,7 @@
                             x:Name="QueryTextBox"
                             Grid.Column="0"
                             Margin="6"
+                            VerticalAlignment="Bottom"
                             materialDesign:HintAssist.Hint="Youtube video URL or ID"
                             materialDesign:TextFieldAssist.DecorationVisibility="Hidden"
                             BorderThickness="0"
@@ -272,7 +277,7 @@
                                             <Button
                                                 Padding="4"
                                                 VerticalAlignment="Center"
-                                                Command="{Binding MainViewModel.DownloadMediaStreamCommand, Source={StaticResource Locator}}"
+                                                Command="{Binding DataContext.DownloadMediaStreamCommand, ElementName=Root}"
                                                 CommandParameter="{Binding}"
                                                 Style="{DynamicResource MaterialDesignFlatButton}">
                                                 <materialDesign:PackIcon
@@ -313,7 +318,7 @@
                                             <Button
                                                 Padding="4"
                                                 VerticalAlignment="Center"
-                                                Command="{Binding MainViewModel.DownloadMediaStreamCommand, Source={StaticResource Locator}}"
+                                                Command="{Binding DataContext.DownloadMediaStreamCommand, ElementName=Root}"
                                                 CommandParameter="{Binding}"
                                                 Style="{DynamicResource MaterialDesignFlatButton}">
                                                 <materialDesign:PackIcon
@@ -354,7 +359,7 @@
                                             <Button
                                                 Padding="4"
                                                 VerticalAlignment="Center"
-                                                Command="{Binding MainViewModel.DownloadMediaStreamCommand, Source={StaticResource Locator}}"
+                                                Command="{Binding DataContext.DownloadMediaStreamCommand, ElementName=Root}"
                                                 CommandParameter="{Binding}"
                                                 Style="{DynamicResource MaterialDesignFlatButton}">
                                                 <materialDesign:PackIcon
@@ -407,7 +412,7 @@
                                         <Button
                                             Padding="4"
                                             VerticalAlignment="Center"
-                                            Command="{Binding MainViewModel.DownloadClosedCaptionTrackCommand, Source={StaticResource Locator}}"
+                                            Command="{Binding DataContext.DownloadClosedCaptionTrackCommand, ElementName=Root}"
                                             CommandParameter="{Binding}"
                                             Style="{DynamicResource MaterialDesignFlatButton}">
                                             <materialDesign:PackIcon
