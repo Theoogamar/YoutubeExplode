@@ -50,6 +50,7 @@
             this.barLast = new System.Windows.Forms.TrackBar();
             this.txtFirst = new System.Windows.Forms.Label();
             this.txtLast = new System.Windows.Forms.Label();
+            this.btnX = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.Thumbnail)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.barFirst)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.barLast)).BeginInit();
@@ -272,12 +273,28 @@
             this.txtLast.Text = "00:00";
             this.txtLast.Visible = false;
             // 
+            // btnX
+            // 
+            this.btnX.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.btnX.Enabled = false;
+            this.btnX.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnX.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnX.ForeColor = System.Drawing.SystemColors.Control;
+            this.btnX.Location = new System.Drawing.Point(409, 60);
+            this.btnX.Name = "btnX";
+            this.btnX.Size = new System.Drawing.Size(33, 31);
+            this.btnX.TabIndex = 17;
+            this.btnX.Text = "X";
+            this.btnX.UseVisualStyleBackColor = false;
+            this.btnX.Click += new System.EventHandler(this.btnX_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.ClientSize = new System.Drawing.Size(704, 441);
+            this.Controls.Add(this.btnX);
             this.Controls.Add(this.txtLast);
             this.Controls.Add(this.txtFirst);
             this.Controls.Add(this.btnDownload);
@@ -329,6 +346,7 @@
         private System.Windows.Forms.TrackBar barLast;
         private System.Windows.Forms.Label txtFirst;
         private System.Windows.Forms.Label txtLast;
+        private System.Windows.Forms.Button btnX;
     }
 }
 

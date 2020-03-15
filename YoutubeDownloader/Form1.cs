@@ -169,6 +169,7 @@ namespace YoutubeDownloader
             barLast.Enabled = b;
             txtFirst.Visible = b;
             txtLast.Visible = b;
+            btnX.Enabled = b;
 
             // if disabling UI elements also clear them
             if (!b)
@@ -326,16 +327,16 @@ namespace YoutubeDownloader
             }
             else if (comBoxVideo.SelectedIndex != -1)
             {
-                // reset the video settings in the UI
-                toggleThings(false);
-                Refresh();
-
                 // get the video codec
                 string item = comBoxVideo.Items[comBoxVideo.SelectedIndex] as string;
                 string codec = item.Split(' ')[2];
 
                 // getting the download url
                 string url = videoUrls[comBoxVideo.SelectedIndex];
+
+                // reset the video settings in the UI
+                toggleThings(false);
+                Refresh();
 
                 // download the video from url
                 using (CustomWebClient web = new CustomWebClient())
@@ -370,7 +371,7 @@ namespace YoutubeDownloader
                         if (index != customWebClient.Index)
                         {
                             customWebClient.Index = index;
-                            
+
                             // move the progress bar down one
                             customWebClient.Progbar.Top -= 18;
                         }
@@ -448,11 +449,24 @@ namespace YoutubeDownloader
         {
             btnAudio.Text = AudioText;
             comBoxVideo.SelectedIndex = -1;
+            toggleSlideBar(true);
         }
         private void ComBoxVideo_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (comBoxVideo.SelectedIndex != -1)
+            {
                 btnAudio.Text = "";
+                toggleSlideBar(false);
+            }
+        }
+
+        // toggle the slide bar only aviable with audio downloads
+        private void toggleSlideBar(bool b)
+        {
+            barFirst.Enabled = b;
+            barLast.Enabled = b;
+            txtFirst.Visible = b;
+            txtLast.Visible = b;
         }
 
         // remove illegal characters function
@@ -504,14 +518,23 @@ namespace YoutubeDownloader
             e.NewWidth = listView.Columns[e.ColumnIndex].Width;
         }
 
+        // updates text for the scroll bar
         private void barFirst_Scroll(object sender, EventArgs e)
         {
             txtFirst.Text = $"{TimeSpan.FromSeconds(barFirst.Value).ToString(@"mm\:ss")}";
         }
-
         private void barLast_Scroll(object sender, EventArgs e)
         {
             txtLast.Text = $"{(duration - TimeSpan.FromSeconds(barLast.Maximum - barLast.Value)).ToString(@"mm\:ss")}";
+        }
+
+        // remove the current pasted info
+        private void btnX_Click(object sender, EventArgs e)
+        {
+            toggleThings(false);
+
+            // clear pasted text
+            TxtUrl.Text = "";
         }
     }
 }
