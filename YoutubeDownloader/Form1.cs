@@ -32,7 +32,7 @@ namespace YoutubeDownloader
         private sbyte iter = -1;
 
         // store the text on audio select button
-        private string AudioText;
+        private string AudioText = "";
 
         // stores the vidoe lenght
         private TimeSpan duration;
@@ -174,6 +174,7 @@ namespace YoutubeDownloader
             // if disabling UI elements also clear them
             if (!b)
             {
+                AudioText = "";
                 btnAudio.Text = "";
                 comBoxVideo.Items.Clear();
                 txtBoxVidName.Text = "";
@@ -211,7 +212,7 @@ namespace YoutubeDownloader
                 }
             }
 
-            AudioText = "";
+            //AudioText = "";
 
             // if the user picked to download audio or video
             if (btnAudio.Text != "")
@@ -447,9 +448,18 @@ namespace YoutubeDownloader
         // so the user can't selected audio and video it's one or the other
         private void btnAudio_Click(object sender, EventArgs e)
         {
-            btnAudio.Text = AudioText;
-            comBoxVideo.SelectedIndex = -1;
-            toggleSlideBar(true);
+            if (AudioText == "")
+            {
+                // easter egg
+                Clipboard.SetText("https://www.youtube.com/watch?v=laBOGMG-k_c");
+                BtnPaste_Click(sender, e);
+            }
+            else
+            {
+                btnAudio.Text = AudioText;
+                comBoxVideo.SelectedIndex = -1;
+                toggleSlideBar(true);
+            }
         }
         private void ComBoxVideo_SelectedIndexChanged(object sender, EventArgs e)
         {
