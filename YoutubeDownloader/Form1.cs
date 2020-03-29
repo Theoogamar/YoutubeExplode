@@ -31,9 +31,6 @@ namespace YoutubeDownloader
         // iterator for the "loading..." animation
         private sbyte iter = -1;
 
-        // store the text on audio select button
-        private string AudioText = "";
-
         // stores the vidoe lenght
         private TimeSpan duration;
 
@@ -123,8 +120,6 @@ namespace YoutubeDownloader
                 else
                     btnAudio.Text = $"{highest + 1}nd Highest bitrate: {Audio.Bitrate / 1000}kbps .mp3";
 
-                AudioText = btnAudio.Text;
-
                 // save the url for downloading
                 audioUrl = Audio.Url;
 
@@ -165,17 +160,14 @@ namespace YoutubeDownloader
             txtBoxVidName.Enabled = b;
             comBoxVideo.Enabled = b;
             btnDownload.Enabled = b;
-            barFirst.Enabled = b;
-            barLast.Enabled = b;
-            txtFirst.Visible = b;
-            txtLast.Visible = b;
+            toggleSlideBar(b);
             btnX.Enabled = b;
 
             // if disabling UI elements also clear them
             if (!b)
             {
-                AudioText = "";
                 btnAudio.Text = "";
+                btnAudio.ForeColor = Color.Black;
                 comBoxVideo.Items.Clear();
                 txtBoxVidName.Text = "";
                 txtFirst.Text = "00:00";
@@ -211,8 +203,6 @@ namespace YoutubeDownloader
                     return;
                 }
             }
-
-            //AudioText = "";
 
             // if the user picked to download audio or video
             if (btnAudio.Text != "")
@@ -448,15 +438,16 @@ namespace YoutubeDownloader
         // so the user can't selected audio and video it's one or the other
         private void btnAudio_Click(object sender, EventArgs e)
         {
-            if (AudioText == "")
+            if (btnAudio.Text == "")
             {
                 // easter egg
                 Clipboard.SetText("https://www.youtube.com/watch?v=laBOGMG-k_c");
                 BtnPaste_Click(sender, e);
+                btnAudio.Text = "Swauss";
             }
-            else
+            else if (btnAudio.Text != "Swauss")
             {
-                btnAudio.Text = AudioText;
+                btnAudio.ForeColor = Color.Black;
                 comBoxVideo.SelectedIndex = -1;
                 toggleSlideBar(true);
             }
@@ -465,7 +456,7 @@ namespace YoutubeDownloader
         {
             if (comBoxVideo.SelectedIndex != -1)
             {
-                btnAudio.Text = "";
+                btnAudio.ForeColor = Color.White;
                 toggleSlideBar(false);
             }
         }
