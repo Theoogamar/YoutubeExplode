@@ -205,7 +205,7 @@ namespace YoutubeDownloader
             }
 
             // if the user picked to download audio or video
-            if (btnAudio.Text != "")
+            if (comBoxVideo.SelectedIndex == -1)
             {
                 using (CustomBackgroundWorker Worker = new CustomBackgroundWorker())
                 {
@@ -316,7 +316,7 @@ namespace YoutubeDownloader
                     }
                 }
             }
-            else if (comBoxVideo.SelectedIndex != -1)
+            else
             {
                 // get the video codec
                 string item = comBoxVideo.Items[comBoxVideo.SelectedIndex] as string;
