@@ -1,6 +1,5 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Text.RegularExpressions;
 
 namespace YoutubeExplode.Internal
@@ -75,7 +74,7 @@ namespace YoutubeExplode.Internal
             var paramsEncoded = query.TrimStart('?').Split("&");
             foreach (var paramEncoded in paramsEncoded)
             {
-                var param = WebUtility.UrlDecode(paramEncoded);
+                var param = paramEncoded.UrlDecode();
 
                 // Look for the equals sign
                 var equalsPos = param.IndexOf('=');

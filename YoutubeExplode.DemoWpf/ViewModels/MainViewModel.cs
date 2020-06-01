@@ -1,27 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.Win32;
-using YoutubeExplode.Channels;
 using YoutubeExplode.DemoWpf.ViewModels.Framework;
-using YoutubeExplode.Videos;
-using YoutubeExplode.Videos.ClosedCaptions;
-using YoutubeExplode.Videos.Streams;
+using YoutubeExplode.Models;
+using YoutubeExplode.Models.ClosedCaptions;
+using YoutubeExplode.Models.MediaStreams;
 
 namespace YoutubeExplode.DemoWpf.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
-        private readonly YoutubeClient _youtube;
+        private readonly YoutubeClient _client;
 
         private bool _isBusy;
         private string? _query;
         private Video? _video;
         private Channel? _channel;
-        private IReadOnlyList<MuxedStreamInfo>? _muxedStreamInfos;
-        private IReadOnlyList<AudioOnlyStreamInfo>? _audioOnlyStreamInfos;
-        private IReadOnlyList<VideoOnlyStreamInfo>? _videoOnlyStreamInfos;
+        private MediaStreamInfoSet? _mediaStreamInfos;
         private IReadOnlyList<ClosedCaptionTrackInfo>? _closedCaptionTrackInfos;
         private double _progress;
         private bool _isProgressIndeterminate;
@@ -33,7 +29,7 @@ namespace YoutubeExplode.DemoWpf.ViewModels
             {
                 Set(ref _isBusy, value);
                 PullDataCommand.RaiseCanExecuteChanged();
-                DownloadStreamCommand.RaiseCanExecuteChanged();
+                DownloadMediaStreamCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -67,32 +63,12 @@ namespace YoutubeExplode.DemoWpf.ViewModels
             }
         }
 
-        public IReadOnlyList<MuxedStreamInfo>? MuxedStreamInfos
+        public MediaStreamInfoSet? MediaStreamInfos
         {
-            get => _muxedStreamInfos;
+            get => _mediaStreamInfos;
             private set
             {
-                Set(ref _muxedStreamInfos, value);
-                RaisePropertyChanged(nameof(IsDataAvailable));
-            }
-        }
-
-        public IReadOnlyList<AudioOnlyStreamInfo>? AudioOnlyStreamInfos
-        {
-            get => _audioOnlyStreamInfos;
-            private set
-            {
-                Set(ref _audioOnlyStreamInfos, value);
-                RaisePropertyChanged(nameof(IsDataAvailable));
-            }
-        }
-
-        public IReadOnlyList<VideoOnlyStreamInfo>? VideoOnlyStreamInfos
-        {
-            get => _videoOnlyStreamInfos;
-            private set
-            {
-                Set(ref _videoOnlyStreamInfos, value);
+                Set(ref _mediaStreamInfos, value);
                 RaisePropertyChanged(nameof(IsDataAvailable));
             }
         }
@@ -107,12 +83,8 @@ namespace YoutubeExplode.DemoWpf.ViewModels
             }
         }
 
-        public bool IsDataAvailable =>
-            Video != null && Channel != null &&
-            MuxedStreamInfos != null &&
-            AudioOnlyStreamInfos != null &&
-            VideoOnlyStreamInfos != null &&
-            ClosedCaptionTrackInfos != null;
+        public bool IsDataAvailable => Video != null && Channel != null
+                                       && MediaStreamInfos != null && ClosedCaptionTrackInfos != null;
 
         public double Progress
         {
@@ -128,21 +100,26 @@ namespace YoutubeExplode.DemoWpf.ViewModels
 
         // Commands
         public RelayCommand PullDataCommand { get; }
-        public RelayCommand<IStreamInfo> DownloadStreamCommand { get; }
+        public RelayCommand<MediaStreamInfo> DownloadMediaStreamCommand { get; }
         public RelayCommand<ClosedCaptionTrackInfo> DownloadClosedCaptionTrackCommand { get; }
 
         public MainViewModel()
         {
-            _youtube = new YoutubeClient();
+            _client = new YoutubeClient();
 
             // Commands
             PullDataCommand = new RelayCommand(PullData,
                 () => !IsBusy && !string.IsNullOrWhiteSpace(Query));
-            DownloadStreamCommand = new RelayCommand<IStreamInfo>(DownloadStream,
+            DownloadMediaStreamCommand = new RelayCommand<MediaStreamInfo>(DownloadMediaStream,
                 _ => !IsBusy);
             DownloadClosedCaptionTrackCommand = new RelayCommand<ClosedCaptionTrackInfo>(
                 DownloadClosedCaptionTrack, _ => !IsBusy);
         }
+
+        private static string NormalizeVideoId(string input) =>
+            YoutubeClient.TryParseVideoId(input, out var videoId)
+                ? videoId!
+                : input;
 
         private static string SanitizeFileName(string fileName)
         {
@@ -175,24 +152,17 @@ namespace YoutubeExplode.DemoWpf.ViewModels
                 // Reset data
                 Video = null;
                 Channel = null;
-                MuxedStreamInfos = null;
-                AudioOnlyStreamInfos = null;
-                VideoOnlyStreamInfos = null;
+                MediaStreamInfos = null;
                 ClosedCaptionTrackInfos = null;
 
                 // Normalize video id
-                var videoId = new VideoId(Query!);
+                var videoId = NormalizeVideoId(Query!);
 
                 // Get data
-                var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(videoId);
-                var trackManifest = await _youtube.Videos.ClosedCaptions.GetManifestAsync(videoId);
-
-                Video = await _youtube.Videos.GetAsync(videoId);
-                Channel = await _youtube.Channels.GetByVideoAsync(videoId);
-                MuxedStreamInfos = streamManifest.GetMuxed().ToArray();
-                AudioOnlyStreamInfos = streamManifest.GetAudioOnly().ToArray();
-                VideoOnlyStreamInfos = streamManifest.GetVideoOnly().ToArray();
-                ClosedCaptionTrackInfos = trackManifest.Tracks;
+                Video = await _client.GetVideoAsync(videoId);
+                Channel = await _client.GetVideoAuthorChannelAsync(videoId);
+                MediaStreamInfos = await _client.GetVideoMediaStreamInfosAsync(videoId);
+                ClosedCaptionTrackInfos = await _client.GetVideoClosedCaptionTrackInfosAsync(videoId);
             }
             finally
             {
@@ -202,7 +172,7 @@ namespace YoutubeExplode.DemoWpf.ViewModels
             }
         }
 
-        private async void DownloadStream(IStreamInfo streamInfo)
+        private async void DownloadMediaStream(MediaStreamInfo info)
         {
             try
             {
@@ -211,12 +181,11 @@ namespace YoutubeExplode.DemoWpf.ViewModels
                 Progress = 0;
 
                 // Generate default file name
-                var defaultFileName = SanitizeFileName($"{Video!.Title}.{streamInfo.Container.Name}");
+                var fileExt = info.Container.GetFileExtension();
+                var defaultFileName = SanitizeFileName($"{Video!.Title}.{fileExt}");
 
                 // Prompt file path
-                var filePath = PromptSaveFilePath(defaultFileName,
-                    $"{streamInfo.Container.Name} files|*.{streamInfo.Container.Name}|All Files|*.*");
-
+                var filePath = PromptSaveFilePath(defaultFileName, $"{fileExt} files|*.{fileExt}|All Files|*.*");
                 if (string.IsNullOrWhiteSpace(filePath))
                     return;
 
@@ -224,7 +193,7 @@ namespace YoutubeExplode.DemoWpf.ViewModels
                 var progressHandler = new Progress<double>(p => Progress = p);
 
                 // Download to file
-                await _youtube.Videos.Streams.DownloadAsync(streamInfo, filePath, progressHandler);
+                await _client.DownloadMediaStreamAsync(info, filePath, progressHandler);
             }
             finally
             {
@@ -234,7 +203,7 @@ namespace YoutubeExplode.DemoWpf.ViewModels
             }
         }
 
-        private async void DownloadClosedCaptionTrack(ClosedCaptionTrackInfo trackInfo)
+        private async void DownloadClosedCaptionTrack(ClosedCaptionTrackInfo info)
         {
             try
             {
@@ -243,7 +212,7 @@ namespace YoutubeExplode.DemoWpf.ViewModels
                 Progress = 0;
 
                 // Generate default file name
-                var defaultFileName = SanitizeFileName($"{Video!.Title}.{trackInfo.Language.Name}.srt");
+                var defaultFileName = SanitizeFileName($"{Video!.Title}.{info.Language.Name}.srt");
 
                 // Prompt file path
                 var filePath = PromptSaveFilePath(defaultFileName, "SRT Files|*.srt|All Files|*.*");
@@ -254,7 +223,7 @@ namespace YoutubeExplode.DemoWpf.ViewModels
                 var progressHandler = new Progress<double>(p => Progress = p);
 
                 // Download to file
-                await _youtube.Videos.ClosedCaptions.DownloadAsync(trackInfo, filePath, progressHandler);
+                await _client.DownloadClosedCaptionTrackAsync(info, filePath, progressHandler);
             }
             finally
             {
