@@ -64,13 +64,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CustomBackgroundWorker.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="CustomExtensions.cs" />
-    <Compile Include="CustomWebClient.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="CustomBackgroundWorker.cs" />
+    <Compile Include="CustomClasses.cs" />
+    <Compile Include="CustomWebClient.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

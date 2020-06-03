@@ -9,7 +9,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using YoutubeExplode;
-using YoutubeExplode.Models.MediaStreams;
+using YoutubeExplode.Videos;
+using YoutubeExplode.Videos.Streams;
 using NAudio.Wave;
 using NAudio.MediaFoundation;
 using System.Diagnostics;
@@ -61,15 +62,15 @@ namespace YoutubeDownloader
             toggleThings(false);
             btnPaste.Enabled = false;
 
-            // Get the video ID form the youtube URL
-            if (YoutubeClient.TryParseVideoId(TxtUrl.Text, out string id))
+            // Get the video ID form the youtube URL            
+            if (tryParseVideoId(TxtUrl.Text, out string id))
             {
                 // tell the user it's loading
                 iter = 0;
                 txtLoading.Visible = true;
 
                 // media stream info
-                MediaStreamInfoSet streamInfo = null;
+                StreamManifest streams = null;
 
                 try
                 {
@@ -77,10 +78,13 @@ namespace YoutubeDownloader
                     YoutubeClient client = new YoutubeClient();
 
                     // Get media stream info
-                    streamInfo = await client.GetVideoMediaStreamInfosAsync(id);
+                    //streamInfo = await client.GetVideoMediaStreamInfosAsync(id);
+                    streams = await client.Videos.Streams.GetManifestAsync(id);
 
+                    // get the meta data for the video
+                    var video = await client.Videos.GetAsync(id);
+     
                     // Set video tile to text box
-                    var video = await client.GetVideoAsync(id);
                     txtBoxVidName.Text = video.Title;
 
                     // get duration and set the duration
@@ -101,8 +105,9 @@ namespace YoutubeDownloader
                 string picId = "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg";
                 Thumbnail.LoadAsync(picId);
 
-                // get the highest bitrate audio stream with out vorbis
-                var Audio = streamInfo.Audio.GetHighestBitrate(out int highest, AudioEncoding.Vorbis);
+                // get the highest bitrate audio stream with out vorbis audio encoding
+                //var Audio = streamInfo.Audio.GetHighestBitrate(out int highest, AudioEncoding.Vorbis);
+                var Audio = streams.GetAudioOnly().WithHighestBitrate();
 
                 if (Audio == null)
                 {
@@ -114,29 +119,30 @@ namespace YoutubeDownloader
                     return;
                 }
 
+                btnAudio.Text = $"Highest bitrate: {Audio.Bitrate.BitsPerSecond / 1000}kbps .mp3";
                 // add the highest quailty audio to the list
-                if (highest == 0)
-                    btnAudio.Text = $"Highest bitrate: {Audio.Bitrate / 1000}kbps .mp3";
-                else
-                    btnAudio.Text = $"{highest + 1}nd Highest bitrate: {Audio.Bitrate / 1000}kbps .mp3";
+                //if (highest == 0)
+                //    btnAudio.Text = $"Highest bitrate: {Audio.Bitrate / 1000}kbps .mp3";
+                //else
+                //    btnAudio.Text = $"{highest + 1}nd Highest bitrate: {Audio.Bitrate / 1000}kbps .mp3";
 
                 // save the url for downloading
                 audioUrl = Audio.Url;
 
                 // save the bitrate for downloading
-                Bitrate = (int)Audio.Bitrate;
+                Bitrate = (int)Audio.Bitrate.BitsPerSecond;
 
                 // clear and make a new list
                 videoUrls = new List<string>();
 
                 // Set all video things
-                for (int i = 0; i < streamInfo.Muxed.Count; i++)
+                foreach (var video in streams.GetMuxed())
                 {
                     // add video info to combobox
-                    comBoxVideo.Items.Add($"Resolution: {streamInfo.Muxed[i].VideoQualityLabel} .{streamInfo.Muxed[i].Container}");
+                    comBoxVideo.Items.Add($"Resolution: {video.VideoQualityLabel} .{video.Container}");
 
                     // add download url to string arry
-                    videoUrls.Add(streamInfo.Muxed[i].Url);
+                    videoUrls.Add(video.Url);
                 }
 
                 // toggle it back off
@@ -151,6 +157,20 @@ namespace YoutubeDownloader
 
             // toggle paste button back on
             btnPaste.Enabled = true;
+        }
+
+        private bool tryParseVideoId(string url, out string id)
+        {
+            try
+            {
+                id = new VideoId(url);
+                return true;
+            }
+            catch
+            {
+                id = "";
+                return false;
+            }
         }
 
         // toggle the UI
