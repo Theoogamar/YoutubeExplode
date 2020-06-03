@@ -262,7 +262,7 @@ namespace YoutubeDownloader
 
                                         // update the bytes received in the listView
                                         listView.Items[customWorker.Index].SubItems[(int)subItems.Total].Text =
-                                            $"{evt.TimeEncoded.ToString(@"mm\:ss")} / {evt.TotalTimeToEncode.ToString(@"mm\:ss")}";
+                                            $"{evt.TimeEncoded.ToString(@"mm\:ss")} / {evt.TotalTimeToEncode.ToString(@"mm\:ss")}MB";
                                     });
 
                                     // Running on the UI thread
@@ -488,7 +488,7 @@ namespace YoutubeDownloader
             item.SubItems.Add(@"¯\_(ツ)_/¯");
 
             // Total colum
-            item.SubItems.Add("00 / 00");
+            item.SubItems.Add("00:00 / ??:??MB");
 
             // is audio or video
             item.SubItems.Add(media);
