@@ -554,8 +554,9 @@ namespace YoutubeDownloader
         {
             toggleThings(false);
 
-            // clear pasted text
+            // clear pasted text and thumbnail
             TxtUrl.Text = "";
+            Thumbnail.Image = null;
         }
     }
 }
