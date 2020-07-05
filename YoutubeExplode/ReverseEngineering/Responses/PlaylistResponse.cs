@@ -64,6 +64,11 @@ namespace YoutubeExplode.ReverseEngineering.Responses
                 .GetProperty("author")
                 .GetString();
 
+            public string GetChannelId() => _root
+                .GetProperty("user_id")
+                .GetString()
+                .Pipe(id => "UC" + id);
+
             public DateTimeOffset GetUploadDate() => _root
                 .GetProperty("time_created")
                 .GetInt64()

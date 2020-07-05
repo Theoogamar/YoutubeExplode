@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using YoutubeExplode.Channels;
 using YoutubeExplode.Common;
 
 namespace YoutubeExplode.Videos
@@ -28,6 +29,11 @@ namespace YoutubeExplode.Videos
         /// Video author.
         /// </summary>
         public string Author { get; }
+
+        /// <summary>
+        /// Video channel ID.
+        /// </summary>
+        public ChannelId ChannelId { get; }
 
         /// <summary>
         /// Video upload date.
@@ -66,6 +72,7 @@ namespace YoutubeExplode.Videos
             VideoId id,
             string title,
             string author,
+            ChannelId channelId,
             DateTimeOffset uploadDate,
             string description,
             TimeSpan duration,
@@ -76,6 +83,7 @@ namespace YoutubeExplode.Videos
             Id = id;
             Title = title;
             Author = author;
+            ChannelId = channelId;
             UploadDate = uploadDate;
             Description = description;
             Duration = duration;

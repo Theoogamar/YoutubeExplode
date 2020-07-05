@@ -1,7 +1,8 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using YoutubeExplode.Common;
+using YoutubeExplode.Internal.Extensions;
 using YoutubeExplode.ReverseEngineering;
 using YoutubeExplode.ReverseEngineering.Responses;
 using YoutubeExplode.Videos;
@@ -30,11 +31,19 @@ namespace YoutubeExplode.Playlists
         {
             var response = await PlaylistResponse.GetAsync(_httpClient, id);
 
+            var thumbnails = response
+                .GetVideos()
+                .FirstOrDefault()?
+                .GetId()
+                .Pipe(i => new ThumbnailSet(i));
+
             return new Playlist(
                 id,
                 response.GetTitle(),
                 response.TryGetAuthor(),
-                response.TryGetDescription() ?? "", new Engagement(
+                response.TryGetDescription() ?? "",
+                thumbnails,
+                new Engagement(
                     response.TryGetViewCount() ?? 0,
                     response.TryGetLikeCount() ?? 0,
                     response.TryGetDislikeCount() ?? 0
@@ -66,6 +75,7 @@ namespace YoutubeExplode.Playlists
                         videoId,
                         video.GetTitle(),
                         video.GetAuthor(),
+                        video.GetChannelId(),
                         video.GetUploadDate(),
                         video.GetDescription(),
                         video.GetDuration(),
