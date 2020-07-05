@@ -32,8 +32,11 @@ namespace YoutubeDownloader
         // iterator for the "loading..." animation
         private sbyte iter = -1;
 
-        // stores the vidoe lenght
+        // stores the video lenght
         private TimeSpan duration;
+
+        // stores the video id to put the source url in the .mp3 meta data
+        string id;
 
         // enum for listView
         private enum subItems
@@ -63,7 +66,7 @@ namespace YoutubeDownloader
             btnPaste.Enabled = false;
 
             // Get the video ID form the youtube URL            
-            if (tryParseVideoId(TxtUrl.Text, out string id))
+            if (tryParseVideoId(TxtUrl.Text, out id))
             {
                 // tell the user it's loading
                 iter = 0;
@@ -224,117 +227,112 @@ namespace YoutubeDownloader
             // if the user picked to download audio or video
             if (comBoxVideo.SelectedIndex == -1)
             {
-                using (CustomBackgroundWorker Worker = new CustomBackgroundWorker())
+                // copy the cut values off the UI thread
+                int first = barFirst.Value;
+                int last = barLast.Maximum - barLast.Value;
+
+                // reset the video settings in the UI
+                toggleThings(false);
+                Refresh();
+
+                try
                 {
-                    // copy the cut values off the UI thread
-                    int first = barFirst.Value;
-                    int last = barLast.Maximum - barLast.Value;
-
-                    // reset the video settings in the UI
-                    toggleThings(false);
-                    Refresh();
-
-                    // adds a download item to the listview
-                    Worker.Progbar = LvAddItem(ref listView, fileName, true, "a");
-
-                    // the position in the listView to put the percentage downloaded
-                    Worker.Index = listView.Items.Count - 1;
-
-                    // starting the thread
-                    Worker.DoWork += worker_DoWork;
-                    Worker.RunWorkerCompleted += worker_RunWorkerCompleted;
-                    Worker.Name = fileName;
-                    Worker.RunWorkerAsync();
-
-                    void worker_DoWork(object o, DoWorkEventArgs ev)
+                    // download the auido from url
+                    using (var reader = new MediaFoundationReader(audioUrl))
                     {
-                        try
+                        // set up the encoder for mp3 file formate
+                        var mediaType = MediaFoundationEncoder.SelectMediaType(AudioSubtypes.MFAudioFormat_MP3, reader.WaveFormat, Bitrate);
+                        if (mediaType == null) throw new InvalidOperationException("No suitable MP3 encoders available");
+                        var audio = new MediaFoundationEncoder(mediaType);
+
+                        audio.ProgBar = LvAddItem(ref listView, fileName, true, "a");
+                        audio.Index = listView.Items.Count - 1;
+                        audio.Name = fileName;
+
+                        audio.LoadProgressChanged += encoder_LoadProgressChanged;
+                        audio.LoadComplete += encoder_LoadComplete;
+
+                        // encode it to mp3
+                        //audio.Encode($"{FilePath}{fileName}.mp3", reader, first, last);
+                        await Task.Run(() => audio.Encode($"{FilePath}{fileName}.mp3", reader, first, last));
+
+                        void encoder_LoadProgressChanged(object o, LoadProgressChangedEventArgs ev)
                         {
-                            // download the auido from url
-                            using (var reader = new MediaFoundationReader(audioUrl))
+                            // set current encoder
+                            var encoder = o as MediaFoundationEncoder;
+
+                            int index = 0;
+
+                            // Running on the UI thread
+                            listView.Invoke((MethodInvoker)delegate
                             {
-                                // set up the encoder for mp3 file formate
-                                var mediaType = MediaFoundationEncoder.SelectMediaType(AudioSubtypes.MFAudioFormat_MP3, reader.WaveFormat, Bitrate);
-                                if (mediaType == null) throw new InvalidOperationException("No suitable MP3 encoders available");
-                                var audio = new MediaFoundationEncoder(mediaType);
 
-                                audio.LoadProgressChanged += encoder_LoadProgressChanged;
-                                audio.LoadComplete += encoder_LoadComplete;
+                                // searchs for the currents index
+                                index = getIndexByName(encoder.Name);
 
-                                // encode it to mp3
-                                audio.Encode($"{FilePath}{fileName}.mp3", reader, first, last);
+                                // update the bytes received in the listView
+                                listView.Items[encoder.Index].SubItems[(int)subItems.Total].Text =
+                                        $"{ev.TimeEncoded.ToString(@"mm\:ss")} / {ev.TotalTimeToEncode.ToString(@"mm\:ss")}MB";
+                            });
 
-                                void encoder_LoadProgressChanged(object obj, LoadProgressChangedEventArgs evt)
+                            ProgressBar progBar = encoder.ProgBar as ProgressBar;
+
+                            // Running on the UI thread
+                            progBar.Invoke((MethodInvoker)delegate
+                            {
+                                // set the progress on the progress bar
+                                progBar.Value = ev.ProgressPercentage;
+
+                                // if the current index is not the same anymore
+                                if (index != encoder.Index)
                                 {
-                                    // set current worker
-                                    var customWorker = o as CustomBackgroundWorker;
+                                    encoder.Index = index;
 
-                                    int index = 0;
-
-                                    // Running on the UI thread
-                                    listView.Invoke((MethodInvoker)delegate {
-
-                                        // searchs for the currents index
-                                        index = getIndexByName(customWorker.Name);
-
-                                        // update the bytes received in the listView
-                                        listView.Items[customWorker.Index].SubItems[(int)subItems.Total].Text =
-                                            $"{evt.TimeEncoded.ToString(@"mm\:ss")} / {evt.TotalTimeToEncode.ToString(@"mm\:ss")}MB";
-                                    });
-
-                                    // Running on the UI thread
-                                    customWorker.Progbar.Invoke((MethodInvoker)delegate {
-
-                                        // set the progress on the progress bar
-                                        customWorker.Progbar.Value = evt.ProgressPercentage;
-
-                                        if (index != customWorker.Index)
-                                        {
-                                            customWorker.Index = index;
-
-                                            // move the progress bar down one
-                                            customWorker.Progbar.Top -= 18;
-                                        }
-                                    });
+                                    // move the progress bar down one
+                                    progBar.Top -= 18;
                                 }
-
-                                void encoder_LoadComplete(object obj, EventArgs evt)
-                                {
-                                    audio.LoadProgressChanged -= encoder_LoadProgressChanged;
-                                    audio.LoadComplete -= encoder_LoadComplete;
-                                }
-                            }
+                            });
                         }
-                        catch (Exception ex)
+
+                        void encoder_LoadComplete(object o, EventArgs ev)
                         {
-                            // if something messes up tell the user
-                            txtLoading.Invoke((MethodInvoker)delegate {
-                                // Running on the UI thread
-                                txtLoading.Text = ex.Message;
-                                txtLoading.Visible = true;
+                            // puts the source url in the .mp3 meta data in the comment section
+                            TagLib.File f = TagLib.File.Create($"{FilePath}{fileName}.mp3");
+                            f.Tag.Comment = $"https://www.youtube.com/watch?v={id}";
+                            f.Save();
+
+                            // set current encoder
+                            var encoder = o as MediaFoundationEncoder;
+
+                            encoder.LoadProgressChanged -= encoder_LoadProgressChanged;
+                            encoder.LoadComplete -= encoder_LoadComplete;
+
+                            // get the progress bar
+                            ProgressBar progBar = encoder.ProgBar as ProgressBar;
+
+                            // Running on the UI thread, remove the progress bar
+                            progBar.Invoke((MethodInvoker)delegate {
+                                progBar.Dispose();
+                            });
+
+                            // Running on the UI thread
+                            listView.Invoke((MethodInvoker)delegate
+                            {
+                                // get the index of a listview item by name
+                                int index = getIndexByName(encoder.Name);
+
+                                // remove the listview item by index
+                                listView.Items.RemoveAt(index);
                             });
                         }
                     }
-
-                    void worker_RunWorkerCompleted(object o, RunWorkerCompletedEventArgs ev)
-                    {
-                        var customWorker = o as CustomBackgroundWorker;
-
-                        // remove the progress bar
-                        customWorker.Progbar.Dispose();
-
-                        // get the index of a listview item by name
-                        int index = getIndexByName(customWorker.Name);
-
-                        // remove the listview item and stopwatch by the index
-                        listView.Items.RemoveAt(index);
-                        //stopwatches.RemoveAt(index);
-
-                        // remove events
-                        customWorker.DoWork -= worker_DoWork;
-                        customWorker.RunWorkerCompleted -= worker_RunWorkerCompleted;
-                    }
                 }
+                catch (Exception ex)
+                {
+                    // if something messes up tell the user
+                    txtLoading.Text = ex.Message;
+                    txtLoading.Visible = true;
+                }                                   
             }
             else
             {

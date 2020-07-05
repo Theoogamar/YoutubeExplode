@@ -18,14 +18,14 @@ namespace NAudio.Gui
 		private System.ComponentModel.Container components = null;
 		private float pan;
 
-        /// <summary>
-        /// True when pan value changed
-        /// </summary>
+				/// <summary>
+				/// True when pan value changed
+				/// </summary>
 		public event EventHandler PanChanged;
 
-        /// <summary>
-        /// Creates a new PanSlider control
-        /// </summary>
+				/// <summary>
+				/// Creates a new PanSlider control
+				/// </summary>
 		public PanSlider()
 		{
 			// This call is required by the Windows.Forms Form Designer.
@@ -63,9 +63,9 @@ namespace NAudio.Gui
 		}
 		#endregion
 
-        /// <summary>
-        /// <see cref="Control.OnPaint"/>
-        /// </summary>
+				/// <summary>
+				/// <see cref="Control.OnPaint"/>
+				/// </summary>
 		protected override void OnPaint(PaintEventArgs pe)
 		{
 			StringFormat format = new StringFormat();
@@ -95,10 +95,10 @@ namespace NAudio.Gui
 			//base.OnPaint(pe);
 		}
 
-        /// <summary>
-        /// <see cref="Control.OnMouseMove"/>
-        /// </summary>
-        protected override void OnMouseMove(MouseEventArgs e)
+				/// <summary>
+				/// <see cref="Control.OnMouseMove"/>
+				/// </summary>
+				protected override void OnMouseMove(MouseEventArgs e)
 		{
 			if(e.Button == MouseButtons.Left)
 			{
@@ -111,7 +111,7 @@ namespace NAudio.Gui
 		/// <see cref="Control.OnMouseDown"/>
 		/// </summary>
 		/// <param name="e"></param>
-        protected override void OnMouseDown(MouseEventArgs e)
+				protected override void OnMouseDown(MouseEventArgs e)
 		{			
 			SetPanFromMouse(e.X);
 			base.OnMouseDown (e);			
@@ -122,9 +122,9 @@ namespace NAudio.Gui
 			Pan = (((float) x / this.Width) * 2.0f) - 1.0f;
 		}
 
-        /// <summary>
-        /// The current Pan setting
-        /// </summary>
+				/// <summary>
+				/// The current Pan setting
+				/// </summary>
 		public float Pan
 		{
 			get

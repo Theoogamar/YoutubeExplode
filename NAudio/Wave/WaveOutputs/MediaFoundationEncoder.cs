@@ -32,6 +32,12 @@ namespace NAudio.Wave
 
         public event EventHandler LoadComplete;
 
+        public string Name { get; set; }
+
+        public object ProgBar { get; set; }
+
+        public int Index { get; set; }
+
         /// <summary>
         /// Queries the available bitrates for a given encoding output type, sample rate and number of channels
         /// </summary>
@@ -179,6 +185,8 @@ namespace NAudio.Wave
         /// </summary>
         /// <param name="outputFile">Output filename (container type is deduced from the filename)</param>
         /// <param name="inputProvider">Input provider (should be PCM, some encoders will also allow IEEE float)</param>
+        /// <param name="first">How many seconds to crop the file from the front</param>
+        /// <param name="last">How many seconds to crop the file from the back</param>
         public void Encode(string outputFile, MediaFoundationReader inputProvider, int first, int last)
         {
             if (inputProvider.WaveFormat.Encoding != WaveFormatEncoding.Pcm && inputProvider.WaveFormat.Encoding != WaveFormatEncoding.IeeeFloat)
@@ -348,7 +356,7 @@ namespace NAudio.Wave
         }
     }
 
-    public static class EventExtensions
+    internal static class EventExtensions
     {
         /// <summary>Rasises the event on the UI thread if avaiable.</summary>
         public static object Raise(this MulticastDelegate multicastDelegate, object sender, EventArgs e)
