@@ -78,7 +78,6 @@ namespace YoutubeDownloader
                     YoutubeClient client = new YoutubeClient();
 
                     // Get media stream info
-                    //streamInfo = await client.GetVideoMediaStreamInfosAsync(id);
                     streams = await client.Videos.Streams.GetManifestAsync(id);
 
                     // get the meta data for the video
@@ -106,8 +105,7 @@ namespace YoutubeDownloader
                 Thumbnail.LoadAsync(picId);
 
                 // get the highest bitrate audio stream with out vorbis audio encoding
-                //var Audio = streamInfo.Audio.GetHighestBitrate(out int highest, AudioEncoding.Vorbis);
-                var Audio = streams.GetAudioOnly().WithHighestBitrate();
+                var Audio = streams.GetAudioOnly().WithHighestBitrateWithoutVorbisEncoding(out int highest);
 
                 if (Audio == null)
                 {
@@ -119,12 +117,11 @@ namespace YoutubeDownloader
                     return;
                 }
 
-                btnAudio.Text = $"Highest bitrate: {Audio.Bitrate.BitsPerSecond / 1000}kbps .mp3";
-                // add the highest quailty audio to the list
-                //if (highest == 0)
-                //    btnAudio.Text = $"Highest bitrate: {Audio.Bitrate / 1000}kbps .mp3";
-                //else
-                //    btnAudio.Text = $"{highest + 1}nd Highest bitrate: {Audio.Bitrate / 1000}kbps .mp3";
+                // add the highest quailty audio button
+                if (highest == 0)
+                    btnAudio.Text = $"Highest bitrate: {(int)Audio.Bitrate.KiloBitsPerSecond}kbps .mp3";
+                else
+                    btnAudio.Text = $"{highest + 1}nd Highest bitrate: {(int)Audio.Bitrate.KiloBitsPerSecond}kbps .mp3";
 
                 // save the url for downloading
                 audioUrl = Audio.Url;
@@ -193,7 +190,7 @@ namespace YoutubeDownloader
                 txtFirst.Text = "00:00";
                 txtLast.Text = "00:00";
                 barFirst.Value = 0;
-                barLast.Value = 100;
+                barLast.Value = barLast.Maximum;
             }
         }
 
@@ -237,7 +234,7 @@ namespace YoutubeDownloader
                     toggleThings(false);
                     Refresh();
 
-                    // adds a donwload item to the listview
+                    // adds a download item to the listview
                     Worker.Progbar = LvAddItem(ref listView, fileName, true, "a");
 
                     // the position in the listView to put the percentage downloaded
@@ -310,9 +307,12 @@ namespace YoutubeDownloader
                         }
                         catch (Exception ex)
                         {
-                            // if something messes up tell the user and return
-                            MessageBox.Show(ex.Message);
-                            return;
+                            // if something messes up tell the user
+                            txtLoading.Invoke((MethodInvoker)delegate {
+                                // Running on the UI thread
+                                txtLoading.Text = ex.Message;
+                                txtLoading.Visible = true;
+                            });
                         }
                     }
 
@@ -388,9 +388,8 @@ namespace YoutubeDownloader
                         }
 
                         // update the bytes received in the listView
-                        listView.Items[customWebClient.Index].SubItems[(int)subItems.Total].Text =
-                            (ev.BytesReceived / 1024f / 1042f).ToString("00.00") + " / " +
-                            (ev.TotalBytesToReceive / 1024f / 1024f).ToString("00.00") + "MB";
+                        listView.Items[customWebClient.Index].SubItems[(int)subItems.Total].Text = 
+                            $"{(ev.BytesReceived / 1024f / 1042f).ToString("00.00")} / {(ev.TotalBytesToReceive / 1024f / 1024f).ToString("00.00")} MB";
                     }
 
                     // download complete 
@@ -441,7 +440,7 @@ namespace YoutubeDownloader
                     iter++;
                     break;
                 case 3:
-                    txtLoading.Text = @"Loading...";
+                    txtLoading.Text = "Loading...";
                     iter++;
                     break;
                 case 4:
@@ -557,6 +556,37 @@ namespace YoutubeDownloader
             // clear pasted text and thumbnail
             TxtUrl.Text = "";
             Thumbnail.Image = null;
+        }
+
+        // event for expanding the scroll bar to full video lenght on button press
+        private void txtFirst_Click(object sender, EventArgs e)
+        {
+            if (!txtFirst.AllowDrop)
+                barFirst.Maximum = (int)duration.TotalSeconds;
+            else
+            {
+                barFirst.Maximum = 100;
+                barFirst_Scroll(sender, e);
+            }
+
+            txtFirst.AllowDrop = !txtFirst.AllowDrop;
+        }
+        private void txtLast_Click(object sender, EventArgs e)
+        {
+            if (!txtLast.AllowDrop)
+            {
+                barLast.Maximum = (int)duration.TotalSeconds;
+                barLast.Value = (int)duration.TotalSeconds - (100 - barLast.Value);
+            }
+            else
+            {
+                int idx = Math.Max(0, 100 - ((int)duration.TotalSeconds - barLast.Value));              
+                barLast.Maximum = 100;
+                barLast.Value = idx;
+                barLast_Scroll(sender, e);
+            }
+
+            txtLast.AllowDrop = !txtLast.AllowDrop;
         }
     }
 }

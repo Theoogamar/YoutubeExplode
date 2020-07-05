@@ -10,13 +10,25 @@ namespace YoutubeDownloader
     public static class CustomExtensions
     {
         /// <summary>
-        /// Gets the audio stream with highest bitrate
-        /// with out a selected AudioEncoding types.
+        /// Gets the audio stream with highest bitrate without vorbis encoding.
         /// Returns null if sequence is empty.
         /// </summary>
-        //public static IStreamInfo? WithHighestBitrate(this IEnumerable<IStreamInfo> streamInfos) =>
-        //    streamInfos.OrderByDescending(s => s.Bitrate).FirstOrDefault();
+        public static IStreamInfo WithHighestBitrateWithoutVorbisEncoding(this IEnumerable<AudioOnlyStreamInfo> streamInfos, out int highest)
+        {
+            var audios = streamInfos.OrderByDescending(s => s.Bitrate);
 
+            highest = 0;
+
+            foreach (var audio in audios)
+            {
+                if (audio.AudioCodec != "vorbis")
+                    return audio;
+
+                highest++;
+            }
+
+            return null;
+        }
     }
 
     public class CustomWebClient : WebClient

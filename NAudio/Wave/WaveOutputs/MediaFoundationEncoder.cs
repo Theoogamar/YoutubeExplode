@@ -95,7 +95,7 @@ namespace NAudio.Wave
         /// <param name="inputProvider">Input provider, must be PCM</param>
         /// <param name="outputFile">Output file path, should end with .wma</param>
         /// <param name="desiredBitRate">Desired bitrate. Use GetEncodeBitrates to find the possibilities for your input type</param>
-        public static void EncodeToWma(MediaFoundationReader inputProvider, string outputFile, int desiredBitRate = 192000)
+        public static void EncodeToWma(MediaFoundationReader inputProvider, string outputFile, int desiredBitRate = 192_000)
         {
             var mediaType = SelectMediaType(AudioSubtypes.MFAudioFormat_WMAudioV8, inputProvider.WaveFormat, desiredBitRate);
             if (mediaType == null) throw new InvalidOperationException("No suitable WMA encoders available");

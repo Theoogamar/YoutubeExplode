@@ -48,9 +48,9 @@
             this.btnAudio = new System.Windows.Forms.Button();
             this.barFirst = new System.Windows.Forms.TrackBar();
             this.barLast = new System.Windows.Forms.TrackBar();
+            this.btnX = new System.Windows.Forms.Button();
             this.txtFirst = new System.Windows.Forms.Label();
             this.txtLast = new System.Windows.Forms.Label();
-            this.btnX = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.Thumbnail)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.barFirst)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.barLast)).BeginInit();
@@ -249,30 +249,6 @@
             this.barLast.Value = 100;
             this.barLast.Scroll += new System.EventHandler(this.barLast_Scroll);
             // 
-            // txtFirst
-            // 
-            this.txtFirst.AutoSize = true;
-            this.txtFirst.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtFirst.ForeColor = System.Drawing.SystemColors.Control;
-            this.txtFirst.Location = new System.Drawing.Point(8, 213);
-            this.txtFirst.Name = "txtFirst";
-            this.txtFirst.Size = new System.Drawing.Size(39, 16);
-            this.txtFirst.TabIndex = 15;
-            this.txtFirst.Text = "00:00";
-            this.txtFirst.Visible = false;
-            // 
-            // txtLast
-            // 
-            this.txtLast.AutoSize = true;
-            this.txtLast.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtLast.ForeColor = System.Drawing.SystemColors.Control;
-            this.txtLast.Location = new System.Drawing.Point(395, 213);
-            this.txtLast.Name = "txtLast";
-            this.txtLast.Size = new System.Drawing.Size(39, 16);
-            this.txtLast.TabIndex = 16;
-            this.txtLast.Text = "00:00";
-            this.txtLast.Visible = false;
-            // 
             // btnX
             // 
             this.btnX.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
@@ -288,15 +264,41 @@
             this.btnX.UseVisualStyleBackColor = false;
             this.btnX.Click += new System.EventHandler(this.btnX_Click);
             // 
+            // txtFirst
+            // 
+            this.txtFirst.AutoSize = true;
+            this.txtFirst.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtFirst.ForeColor = System.Drawing.SystemColors.Control;
+            this.txtFirst.Location = new System.Drawing.Point(12, 222);
+            this.txtFirst.Name = "txtFirst";
+            this.txtFirst.Size = new System.Drawing.Size(49, 20);
+            this.txtFirst.TabIndex = 22;
+            this.txtFirst.Text = "00:00";
+            this.txtFirst.Visible = false;
+            this.txtFirst.Click += new System.EventHandler(this.txtFirst_Click);
+            // 
+            // txtLast
+            // 
+            this.txtLast.AutoSize = true;
+            this.txtLast.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtLast.ForeColor = System.Drawing.SystemColors.Control;
+            this.txtLast.Location = new System.Drawing.Point(385, 222);
+            this.txtLast.Name = "txtLast";
+            this.txtLast.Size = new System.Drawing.Size(49, 20);
+            this.txtLast.TabIndex = 24;
+            this.txtLast.Text = "00:00";
+            this.txtLast.Visible = false;
+            this.txtLast.Click += new System.EventHandler(this.txtLast_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.ClientSize = new System.Drawing.Size(704, 441);
-            this.Controls.Add(this.btnX);
             this.Controls.Add(this.txtLast);
             this.Controls.Add(this.txtFirst);
+            this.Controls.Add(this.btnX);
             this.Controls.Add(this.btnDownload);
             this.Controls.Add(this.barFirst);
             this.Controls.Add(this.btnAudio);
@@ -344,9 +346,9 @@
         private System.Windows.Forms.Button btnAudio;
         private System.Windows.Forms.TrackBar barFirst;
         private System.Windows.Forms.TrackBar barLast;
+        private System.Windows.Forms.Button btnX;
         private System.Windows.Forms.Label txtFirst;
         private System.Windows.Forms.Label txtLast;
-        private System.Windows.Forms.Button btnX;
     }
 }
 
