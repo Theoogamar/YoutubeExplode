@@ -36,15 +36,14 @@ namespace YoutubeDownloader
         private TimeSpan duration;
 
         // stores the video id to put the source url in the .mp3 meta data
-        string id;
+         private string id;
 
         // enum for listView
         private enum subItems
         {
             fileName,
             Progress,
-            Total,
-            Media
+            Total
         }
 
         // Constructor
@@ -73,7 +72,7 @@ namespace YoutubeDownloader
                 txtLoading.Visible = true;
 
                 // media stream info
-                StreamManifest streams = null;
+                StreamManifest streams;
 
                 try
                 {
@@ -92,6 +91,9 @@ namespace YoutubeDownloader
                     // get duration and set the duration
                     duration = video.Duration;
                     txtLast.Text = duration.ToString(@"mm\:ss");
+
+                    // Set thimbnail pic to picture box
+                    Thumbnail.LoadAsync(video.Thumbnails.MaxResUrl);
                 }
                 catch (Exception ex)
                 {
@@ -103,17 +105,13 @@ namespace YoutubeDownloader
                     return;
                 }
 
-                // Set thimbnail pic to picture box
-                string picId = "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg";
-                Thumbnail.LoadAsync(picId);
-
                 // get the highest bitrate audio stream with out vorbis audio encoding
                 var Audio = streams.GetAudioOnly().WithHighestBitrateWithoutVorbisEncoding(out int highest);
 
                 if (Audio == null)
                 {
                     // if the YoutubeClient fails to get any audio
-                    txtLoading.Text = "There's no audio";
+                    txtLoading.Text = $"There's no audio, number of audios: {highest}";
                     txtLoading.Visible = true;
                     iter = -1;
                     btnPaste.Enabled = true;
@@ -243,53 +241,45 @@ namespace YoutubeDownloader
                         // set up the encoder for mp3 file formate
                         var mediaType = MediaFoundationEncoder.SelectMediaType(AudioSubtypes.MFAudioFormat_MP3, reader.WaveFormat, Bitrate);
                         if (mediaType == null) throw new InvalidOperationException("No suitable MP3 encoders available");
-                        var audio = new MediaFoundationEncoder(mediaType);
+                        var audio = new CustomMediaFoundationEncoder(mediaType);
 
-                        audio.ProgBar = LvAddItem(ref listView, fileName, true, "a");
+                        // add all the nessary varables to the custom class
+                        audio.Item = LvAddItem(ref listView, fileName, out ProgressBar progbar);
+                        audio.ProgBar = progbar;
                         audio.Index = listView.Items.Count - 1;
-                        audio.Name = fileName;
 
                         audio.LoadProgressChanged += encoder_LoadProgressChanged;
                         audio.LoadComplete += encoder_LoadComplete;
 
                         // encode it to mp3
-                        //audio.Encode($"{FilePath}{fileName}.mp3", reader, first, last);
                         await Task.Run(() => audio.Encode($"{FilePath}{fileName}.mp3", reader, first, last));
 
                         void encoder_LoadProgressChanged(object o, LoadProgressChangedEventArgs ev)
                         {
                             // set current encoder
-                            var encoder = o as MediaFoundationEncoder;
-
-                            int index = 0;
+                            var encoder = o as CustomMediaFoundationEncoder;
 
                             // Running on the UI thread
                             listView.Invoke((MethodInvoker)delegate
                             {
-
-                                // searchs for the currents index
-                                index = getIndexByName(encoder.Name);
-
                                 // update the bytes received in the listView
-                                listView.Items[encoder.Index].SubItems[(int)subItems.Total].Text =
+                                encoder.Item.SubItems[(int)subItems.Total].Text =
                                         $"{ev.TimeEncoded.ToString(@"mm\:ss")} / {ev.TotalTimeToEncode.ToString(@"mm\:ss")}MB";
                             });
 
-                            ProgressBar progBar = encoder.ProgBar as ProgressBar;
-
                             // Running on the UI thread
-                            progBar.Invoke((MethodInvoker)delegate
+                            encoder.ProgBar.Invoke((MethodInvoker)delegate
                             {
                                 // set the progress on the progress bar
-                                progBar.Value = ev.ProgressPercentage;
+                                encoder.ProgBar.Value = ev.ProgressPercentage;
 
-                                // if the current index is not the same anymore
-                                if (index != encoder.Index)
+                                // checks if the listitem has moved down
+                                if (encoder.Item.Index != encoder.Index)
                                 {
-                                    encoder.Index = index;
+                                    encoder.Index = encoder.Item.Index;
 
                                     // move the progress bar down one
-                                    progBar.Top -= 18;
+                                    encoder.ProgBar.Top -= 18;
                                 }
                             });
                         }
@@ -298,31 +288,23 @@ namespace YoutubeDownloader
                         {
                             // puts the source url in the .mp3 meta data in the comment section
                             TagLib.File f = TagLib.File.Create($"{FilePath}{fileName}.mp3");
-                            f.Tag.Comment = $"https://www.youtube.com/watch?v={id}";
+                            f.Tag.Comment = $"www.youtube.com/watch?v={id}";
                             f.Save();
 
                             // set current encoder
-                            var encoder = o as MediaFoundationEncoder;
+                            var encoder = o as CustomMediaFoundationEncoder;
 
                             encoder.LoadProgressChanged -= encoder_LoadProgressChanged;
                             encoder.LoadComplete -= encoder_LoadComplete;
 
-                            // get the progress bar
-                            ProgressBar progBar = encoder.ProgBar as ProgressBar;
-
                             // Running on the UI thread, remove the progress bar
-                            progBar.Invoke((MethodInvoker)delegate {
-                                progBar.Dispose();
+                            encoder.ProgBar.Invoke((MethodInvoker)delegate {
+                                encoder.ProgBar.Dispose();
                             });
 
-                            // Running on the UI thread
-                            listView.Invoke((MethodInvoker)delegate
-                            {
-                                // get the index of a listview item by name
-                                int index = getIndexByName(encoder.Name);
-
-                                // remove the listview item by index
-                                listView.Items.RemoveAt(index);
+                            // Running on the UI thread, remove the listViewItem
+                            listView.Invoke((MethodInvoker)delegate {
+                                encoder.Item.Remove();
                             });
                         }
                     }
@@ -351,17 +333,17 @@ namespace YoutubeDownloader
                 using (CustomWebClient web = new CustomWebClient())
                 {
                     // adds a download item to the listview
-                    web.Progbar = LvAddItem(ref listView, fileName, true, "v");
+                    web.Item = LvAddItem(ref listView, fileName, out ProgressBar probar);
+
+                    // add the progress bar
+                    web.ProgBar = probar;
+
+                    // the position in the listViewItem to measure changes
+                    web.Index = listView.Items.Count - 1;
 
                     // add events
                     web.DownloadProgressChanged += web_DownloadProgressChanged;
                     web.DownloadFileCompleted += web_DownloadFileCompleted;
-
-                    // sets the name so i can search for the index
-                    web.Name = fileName;
-
-                    // the position in the listView to put the percentage downloaded
-                    web.Index = listView.Items.Count - 1;
 
                     // download the video file
                     await web.DownloadFileTaskAsync(url, FilePath + fileName + codec);
@@ -373,20 +355,19 @@ namespace YoutubeDownloader
                         var customWebClient = o as CustomWebClient;
 
                         // set the progress on the progress bar
-                        customWebClient.Progbar.Value = ev.ProgressPercentage;
+                        customWebClient.ProgBar.Value = ev.ProgressPercentage;
 
-                        // searchs for the currents index
-                        int index = getIndexByName(customWebClient.Name);
-                        if (index != customWebClient.Index)
+                        // checks if the listitem has moved down
+                        if (customWebClient.Item.Index != customWebClient.Index)
                         {
-                            customWebClient.Index = index;
+                            customWebClient.Index = customWebClient.Item.Index;
 
                             // move the progress bar down one
-                            customWebClient.Progbar.Top -= 18;
+                            customWebClient.ProgBar.Top -= 18;
                         }
 
-                        // update the bytes received in the listView
-                        listView.Items[customWebClient.Index].SubItems[(int)subItems.Total].Text = 
+                        // update the bytes received in the listViewItem
+                        customWebClient.Item.SubItems[(int)subItems.Total].Text = 
                             $"{(ev.BytesReceived / 1024f / 1042f).ToString("00.00")} / {(ev.TotalBytesToReceive / 1024f / 1024f).ToString("00.00")} MB";
                     }
 
@@ -397,25 +378,16 @@ namespace YoutubeDownloader
                         var customWebClient = o as CustomWebClient;
 
                         // remove the progress bar
-                        customWebClient.Progbar.Dispose();
+                        customWebClient.ProgBar.Dispose();
 
                         // removes downloaded element
-                        listView.Items.RemoveAt(customWebClient.Index);
+                        customWebClient.Item.Remove();
 
                         // remove events
                         customWebClient.DownloadProgressChanged -= web_DownloadProgressChanged;
                         customWebClient.DownloadFileCompleted -= web_DownloadFileCompleted;
                     }
                 }
-            }
-
-            // getting the index of a listview item by name
-            int getIndexByName(string name)
-            {
-                for (int i = 0; i < listView.Items.Count; i++)
-                    if (listView.Items[i].SubItems[(int)subItems.fileName].Text == name)
-                        return i;
-                return 0;
             }
         }
 
@@ -495,8 +467,8 @@ namespace YoutubeDownloader
             return r.Replace(path, "");
         }
 
-        // wraper function for adding items to the listView
-        private static ProgressBar LvAddItem(ref ListView listView, string filename, bool progressBar, string media)
+        // helper function for adding items to the listView
+        private static ListViewItem LvAddItem(ref ListView listView, string filename, out ProgressBar progbar)
         {
             // make new item for the listview
             ListViewItem item = new ListViewItem(filename);
@@ -506,9 +478,6 @@ namespace YoutubeDownloader
 
             // Total colum
             item.SubItems.Add("00:00 / ??:??MB");
-
-            // is audio or video
-            item.SubItems.Add(media);
 
             // add it all to the listview
             listView.Items.Add(item);
@@ -526,7 +495,9 @@ namespace YoutubeDownloader
             // Put Prog bar In listView 
             ProgBar.SetBounds(rect.X, rect.Y, rect.Width, rect.Height);
 
-            return ProgBar;
+            progbar = ProgBar;
+
+            return item;
         }
 
         // listview Event so the user can't change the colum width
@@ -585,6 +556,17 @@ namespace YoutubeDownloader
             }
 
             txtLast.AllowDrop = !txtLast.AllowDrop;
+        }
+
+        private void Thumbnail_Click(object sender, EventArgs e)
+        {
+            // open the thumbnail in the default web broswer
+            Process.Start($"https://img.youtube.com/vi/{id}/maxresdefault.jpg");
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("SWAUSS");
         }
     }
 }

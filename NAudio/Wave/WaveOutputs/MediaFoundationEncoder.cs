@@ -32,12 +32,6 @@ namespace NAudio.Wave
 
         public event EventHandler LoadComplete;
 
-        public string Name { get; set; }
-
-        public object ProgBar { get; set; }
-
-        public int Index { get; set; }
-
         /// <summary>
         /// Queries the available bitrates for a given encoding output type, sample rate and number of channels
         /// </summary>
@@ -118,6 +112,8 @@ namespace NAudio.Wave
         /// <param name="inputProvider">Input provider, must be PCM</param>
         /// <param name="outputFile">Output file path, should end with .mp3</param>
         /// <param name="desiredBitRate">Desired bitrate. Use GetEncodeBitrates to find the possibilities for your input type</param>
+        /// <param name="first">How many seconds to crop the file from the front</param>
+        /// <param name="last">How many seconds to crop the file from the back</param>
         public void EncodeToMp3(MediaFoundationReader inputProvider, string outputFile, int desiredBitRate = 192000, int first = 0, int last = 0)
         {
             var mediaType = SelectMediaType(AudioSubtypes.MFAudioFormat_MP3, inputProvider.WaveFormat, desiredBitRate);
@@ -211,7 +207,8 @@ namespace NAudio.Wave
             {
                 Marshal.ReleaseComObject(writer);
                 Marshal.ReleaseComObject(inputMediaType.MediaFoundationObject);
-                LoadComplete.Raise(this, EventArgs.Empty);
+                //LoadComplete.Raise(this, EventArgs.Empty);
+                OnLoadComplete();
             }
         }
 
@@ -261,8 +258,9 @@ namespace NAudio.Wave
                 position += duration;
 
                 int percent = (int)(inputProvider.CurrentTime.TotalSeconds / inputProvider.TotalTime.TotalSeconds * 100);
-                LoadProgressChanged.Raise(this, new LoadProgressChangedEventArgs(percent, inputProvider.CurrentTime, inputProvider.TotalTime));
-                
+                //LoadProgressChanged.Raise(this, new LoadProgressChangedEventArgs(percent, inputProvider.CurrentTime, inputProvider.TotalTime));
+                OnLoadProgressChanged(percent, inputProvider.CurrentTime, inputProvider.TotalTime);
+
                 if (inputProvider.CurrentTime.TotalSeconds >= time)
                     duration = 0;
             } while (duration > 0);
@@ -353,6 +351,16 @@ namespace NAudio.Wave
         ~MediaFoundationEncoder()
         {
             Dispose(false);
+        }
+
+        protected virtual void OnLoadProgressChanged(int i, TimeSpan time, TimeSpan total)
+        {
+            LoadProgressChanged?.Invoke(this, new LoadProgressChangedEventArgs(i, time, total));
+        }
+
+        protected virtual void OnLoadComplete()
+        {
+            LoadComplete?.Invoke(this, EventArgs.Empty);
         }
     }
 

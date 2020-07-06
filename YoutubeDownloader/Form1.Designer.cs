@@ -91,6 +91,7 @@
             this.label2.Size = new System.Drawing.Size(38, 15);
             this.label2.TabIndex = 2;
             this.label2.Text = "Link:";
+            this.label2.Click += new System.EventHandler(this.label2_Click);
             // 
             // Thumbnail
             // 
@@ -101,6 +102,7 @@
             this.Thumbnail.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.Thumbnail.TabIndex = 3;
             this.Thumbnail.TabStop = false;
+            this.Thumbnail.Click += new System.EventHandler(this.Thumbnail_Click);
             // 
             // txtBoxVidName
             // 
@@ -296,6 +298,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.ClientSize = new System.Drawing.Size(704, 441);
+            this.Controls.Add(this.txtLoading);
             this.Controls.Add(this.txtLast);
             this.Controls.Add(this.txtFirst);
             this.Controls.Add(this.btnX);
@@ -303,7 +306,6 @@
             this.Controls.Add(this.barFirst);
             this.Controls.Add(this.btnAudio);
             this.Controls.Add(this.listView);
-            this.Controls.Add(this.txtLoading);
             this.Controls.Add(this.comBoxVideo);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);

@@ -3,11 +3,12 @@ using System.Linq;
 using YoutubeExplode.Videos.Streams;
 using System.Windows.Forms;
 using System.Net;
-using System.ComponentModel;
+using NAudio.Wave;
+using NAudio.MediaFoundation;
 
 namespace YoutubeDownloader
 {
-    public static class CustomExtensions
+    internal static class CustomExtensions
     {
         /// <summary>
         /// Gets the audio stream with highest bitrate without vorbis encoding.
@@ -33,10 +34,24 @@ namespace YoutubeDownloader
 
     public class CustomWebClient : WebClient
     {
-        public string Name { get; set; }
+        public ListViewItem Item { get; set; }
 
-        public ProgressBar Progbar { get; set; }
+        public ProgressBar ProgBar { get; set; }
 
         public int Index { get; set; }
+    }
+
+    public class CustomMediaFoundationEncoder : MediaFoundationEncoder
+    {
+        public ListViewItem Item { get; set; }
+
+        public ProgressBar ProgBar { get; set; }
+
+        public int Index { get; set; }
+
+        public CustomMediaFoundationEncoder(MediaType mediaType) : base(mediaType)
+        {
+
+        }
     }
 }
