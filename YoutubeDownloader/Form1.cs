@@ -241,12 +241,13 @@ namespace YoutubeDownloader
                         // set up the encoder for mp3 file formate
                         var mediaType = MediaFoundationEncoder.SelectMediaType(AudioSubtypes.MFAudioFormat_MP3, reader.WaveFormat, Bitrate);
                         if (mediaType == null) throw new InvalidOperationException("No suitable MP3 encoders available");
-                        var audio = new CustomMediaFoundationEncoder(mediaType);
-
-                        // add all the nessary varables to the custom class
-                        audio.Item = LvAddItem(ref listView, fileName, out ProgressBar progbar);
-                        audio.ProgBar = progbar;
-                        audio.Index = listView.Items.Count - 1;
+                        var audio = new CustomMediaFoundationEncoder(mediaType)
+                        {
+                            // add all the nessary varables to the custom class
+                            Item = LvAddItem(ref listView, fileName, out ProgressBar progbar),
+                            ProgBar = progbar,
+                            Index = listView.Items.Count - 1
+                        };
 
                         audio.LoadProgressChanged += encoder_LoadProgressChanged;
                         audio.LoadComplete += encoder_LoadComplete;
@@ -264,7 +265,7 @@ namespace YoutubeDownloader
                             {
                                 // update the bytes received in the listView
                                 encoder.Item.SubItems[(int)subItems.Total].Text =
-                                        $"{ev.TimeEncoded.ToString(@"mm\:ss")} / {ev.TotalTimeToEncode.ToString(@"mm\:ss")}MB";
+                                        $"{ev.TimeEncoded:mm\\:ss} / {ev.TotalTimeToEncode:mm\\:ss}MB";
                             });
 
                             // Running on the UI thread
@@ -368,7 +369,7 @@ namespace YoutubeDownloader
 
                         // update the bytes received in the listViewItem
                         customWebClient.Item.SubItems[(int)subItems.Total].Text = 
-                            $"{(ev.BytesReceived / 1024f / 1042f).ToString("00.00")} / {(ev.TotalBytesToReceive / 1024f / 1024f).ToString("00.00")} MB";
+                            $"{ev.BytesReceived / 1024f / 1042f:00.00} / {ev.TotalBytesToReceive / 1024f / 1024f:00.00} MB";
                     }
 
                     // download complete 
@@ -483,11 +484,10 @@ namespace YoutubeDownloader
             listView.Items.Add(item);
 
             // add progress bar
-            Rectangle rect = default;
             ProgressBar ProgBar = new ProgressBar();
 
             // Get bounds of the second colum
-            rect = listView.Items[listView.Items.Count - 1].SubItems[(int)subItems.Progress].Bounds;
+            Rectangle rect = listView.Items[listView.Items.Count - 1].SubItems[(int)subItems.Progress].Bounds;
 
             // parent progressBar to the listView
             ProgBar.Parent = listView;
@@ -510,11 +510,11 @@ namespace YoutubeDownloader
         // updates text for the scroll bar
         private void barFirst_Scroll(object sender, EventArgs e)
         {
-            txtFirst.Text = $"{TimeSpan.FromSeconds(barFirst.Value).ToString(@"mm\:ss")}";
+            txtFirst.Text = $"{TimeSpan.FromSeconds(barFirst.Value):mm\\:ss}";
         }
         private void barLast_Scroll(object sender, EventArgs e)
         {
-            txtLast.Text = $"{(duration - TimeSpan.FromSeconds(barLast.Maximum - barLast.Value)).ToString(@"mm\:ss")}";
+            txtLast.Text = $"{(duration - TimeSpan.FromSeconds(barLast.Maximum - barLast.Value)):mm\\:ss}";
         }
 
         // remove the current pasted info
