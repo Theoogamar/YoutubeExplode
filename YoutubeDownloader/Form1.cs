@@ -93,7 +93,7 @@ namespace YoutubeDownloader
                     txtLast.Text = duration.ToString(@"mm\:ss");
 
                     // Set thimbnail pic to picture box
-                    Thumbnail.LoadAsync(video.Thumbnails.MaxResUrl);
+                    Thumbnail.LoadAsync(video.Thumbnails.MediumResUrl);
                 }
                 catch (Exception ex)
                 {

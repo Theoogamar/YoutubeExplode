@@ -64,7 +64,7 @@
             this.btnPaste.ForeColor = System.Drawing.SystemColors.Control;
             this.btnPaste.Location = new System.Drawing.Point(15, 41);
             this.btnPaste.Name = "btnPaste";
-            this.btnPaste.Size = new System.Drawing.Size(159, 39);
+            this.btnPaste.Size = new System.Drawing.Size(159, 38);
             this.btnPaste.TabIndex = 0;
             this.btnPaste.Text = "Paste";
             this.btnPaste.UseVisualStyleBackColor = false;
@@ -96,9 +96,9 @@
             // Thumbnail
             // 
             this.Thumbnail.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.Thumbnail.Location = new System.Drawing.Point(448, 0);
+            this.Thumbnail.Location = new System.Drawing.Point(447, 111);
             this.Thumbnail.Name = "Thumbnail";
-            this.Thumbnail.Size = new System.Drawing.Size(256, 256);
+            this.Thumbnail.Size = new System.Drawing.Size(256, 144);
             this.Thumbnail.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.Thumbnail.TabIndex = 3;
             this.Thumbnail.TabStop = false;
@@ -110,9 +110,9 @@
             this.txtBoxVidName.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtBoxVidName.Enabled = false;
             this.txtBoxVidName.ForeColor = System.Drawing.SystemColors.Control;
-            this.txtBoxVidName.Location = new System.Drawing.Point(12, 97);
+            this.txtBoxVidName.Location = new System.Drawing.Point(12, 89);
             this.txtBoxVidName.Name = "txtBoxVidName";
-            this.txtBoxVidName.Size = new System.Drawing.Size(431, 20);
+            this.txtBoxVidName.Size = new System.Drawing.Size(691, 20);
             this.txtBoxVidName.TabIndex = 4;
             // 
             // label1
@@ -121,7 +121,7 @@
             this.label1.BackColor = System.Drawing.Color.Transparent;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.ForeColor = System.Drawing.SystemColors.Control;
-            this.label1.Location = new System.Drawing.Point(91, 120);
+            this.label1.Location = new System.Drawing.Point(91, 114);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(48, 16);
             this.label1.TabIndex = 5;
@@ -133,7 +133,7 @@
             this.label3.BackColor = System.Drawing.Color.Transparent;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.SystemColors.Control;
-            this.label3.Location = new System.Drawing.Point(317, 120);
+            this.label3.Location = new System.Drawing.Point(317, 114);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(49, 16);
             this.label3.TabIndex = 6;
@@ -146,7 +146,7 @@
             this.comBoxVideo.Enabled = false;
             this.comBoxVideo.ForeColor = System.Drawing.SystemColors.Control;
             this.comBoxVideo.FormattingEnabled = true;
-            this.comBoxVideo.Location = new System.Drawing.Point(244, 139);
+            this.comBoxVideo.Location = new System.Drawing.Point(244, 133);
             this.comBoxVideo.Name = "comBoxVideo";
             this.comBoxVideo.Size = new System.Drawing.Size(190, 21);
             this.comBoxVideo.TabIndex = 8;
@@ -159,7 +159,7 @@
             this.btnDownload.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnDownload.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnDownload.ForeColor = System.Drawing.SystemColors.Control;
-            this.btnDownload.Location = new System.Drawing.Point(107, 204);
+            this.btnDownload.Location = new System.Drawing.Point(107, 198);
             this.btnDownload.Name = "btnDownload";
             this.btnDownload.Size = new System.Drawing.Size(227, 44);
             this.btnDownload.TabIndex = 9;
@@ -172,7 +172,7 @@
             this.txtLoading.AutoSize = true;
             this.txtLoading.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtLoading.ForeColor = System.Drawing.SystemColors.Control;
-            this.txtLoading.Location = new System.Drawing.Point(180, 48);
+            this.txtLoading.Location = new System.Drawing.Point(180, 51);
             this.txtLoading.Name = "txtLoading";
             this.txtLoading.Size = new System.Drawing.Size(73, 20);
             this.txtLoading.TabIndex = 10;
@@ -223,7 +223,7 @@
             this.btnAudio.BackColor = System.Drawing.SystemColors.Control;
             this.btnAudio.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAudio.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.btnAudio.Location = new System.Drawing.Point(28, 139);
+            this.btnAudio.Location = new System.Drawing.Point(28, 133);
             this.btnAudio.Name = "btnAudio";
             this.btnAudio.Size = new System.Drawing.Size(181, 23);
             this.btnAudio.TabIndex = 12;
@@ -233,7 +233,7 @@
             // barFirst
             // 
             this.barFirst.Enabled = false;
-            this.barFirst.Location = new System.Drawing.Point(0, 165);
+            this.barFirst.Location = new System.Drawing.Point(0, 159);
             this.barFirst.Maximum = 100;
             this.barFirst.Name = "barFirst";
             this.barFirst.Size = new System.Drawing.Size(220, 45);
@@ -243,7 +243,7 @@
             // barLast
             // 
             this.barLast.Enabled = false;
-            this.barLast.Location = new System.Drawing.Point(229, 165);
+            this.barLast.Location = new System.Drawing.Point(227, 159);
             this.barLast.Maximum = 100;
             this.barLast.Name = "barLast";
             this.barLast.Size = new System.Drawing.Size(220, 45);
@@ -258,7 +258,7 @@
             this.btnX.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnX.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnX.ForeColor = System.Drawing.SystemColors.Control;
-            this.btnX.Location = new System.Drawing.Point(409, 60);
+            this.btnX.Location = new System.Drawing.Point(665, 52);
             this.btnX.Name = "btnX";
             this.btnX.Size = new System.Drawing.Size(33, 31);
             this.btnX.TabIndex = 17;
@@ -271,7 +271,7 @@
             this.txtFirst.AutoSize = true;
             this.txtFirst.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtFirst.ForeColor = System.Drawing.SystemColors.Control;
-            this.txtFirst.Location = new System.Drawing.Point(12, 222);
+            this.txtFirst.Location = new System.Drawing.Point(12, 216);
             this.txtFirst.Name = "txtFirst";
             this.txtFirst.Size = new System.Drawing.Size(49, 20);
             this.txtFirst.TabIndex = 22;
@@ -284,7 +284,7 @@
             this.txtLast.AutoSize = true;
             this.txtLast.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtLast.ForeColor = System.Drawing.SystemColors.Control;
-            this.txtLast.Location = new System.Drawing.Point(385, 222);
+            this.txtLast.Location = new System.Drawing.Point(385, 216);
             this.txtLast.Name = "txtLast";
             this.txtLast.Size = new System.Drawing.Size(49, 20);
             this.txtLast.TabIndex = 24;
@@ -297,7 +297,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.ClientSize = new System.Drawing.Size(704, 441);
+            this.ClientSize = new System.Drawing.Size(705, 441);
             this.Controls.Add(this.txtLoading);
             this.Controls.Add(this.txtLast);
             this.Controls.Add(this.txtFirst);
@@ -310,11 +310,11 @@
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.txtBoxVidName);
-            this.Controls.Add(this.Thumbnail);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.TxtUrl);
             this.Controls.Add(this.btnPaste);
             this.Controls.Add(this.barLast);
+            this.Controls.Add(this.Thumbnail);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
