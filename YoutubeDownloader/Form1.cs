@@ -560,8 +560,14 @@ namespace YoutubeDownloader
 
         private void Thumbnail_Click(object sender, EventArgs e)
         {
+            MouseEventArgs me = e as MouseEventArgs;
+
             // open the thumbnail in the default web broswer
-            Process.Start($"https://img.youtube.com/vi/{id}/maxresdefault.jpg");
+            if (me.Button == MouseButtons.Left)
+                Process.Start($"https://img.youtube.com/vi/{id}/maxresdefault.jpg");
+            else
+                Process.Start($"https://img.youtube.com/vi/{id}/hqdefault.jpg");
+
         }
 
         private void label2_Click(object sender, EventArgs e)
