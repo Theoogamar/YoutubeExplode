@@ -430,12 +430,18 @@ namespace YoutubeDownloader
         {
             if (btnAudio.Text == "")
             {
-                // easter egg
-                Clipboard.SetText("https://www.youtube.com/watch?v=laBOGMG-k_c");
-                BtnPaste_Click(sender, e);
-                btnAudio.Text = "Swauss";
+                // open the music shuffler
+                Form2 musicRand = new Form2();
+                musicRand.Show();
+
+                WindowState = FormWindowState.Minimized;
+
+                musicRand.FormClosed += (o, ev) =>
+                {
+                    WindowState = FormWindowState.Normal;
+                };
             }
-            else if (btnAudio.Text != "Swauss")
+            else
             {
                 btnAudio.ForeColor = Color.Black;
                 comBoxVideo.SelectedIndex = -1;
@@ -567,12 +573,14 @@ namespace YoutubeDownloader
                 Process.Start($"https://img.youtube.com/vi/{id}/maxresdefault.jpg");
             else
                 Process.Start($"https://img.youtube.com/vi/{id}/hqdefault.jpg");
-
         }
 
         private void label2_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("SWAUSS");
+            // easter egg
+            Clipboard.SetText("https://www.youtube.com/watch?v=laBOGMG-k_c");
+            BtnPaste_Click(sender, e);
+            btnAudio.Text = "Swauss";          
         }
     }
 }
