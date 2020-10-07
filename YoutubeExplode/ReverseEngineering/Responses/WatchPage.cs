@@ -43,9 +43,7 @@ namespace YoutubeExplode.ReverseEngineering.Responses
         public PlayerConfig? TryGetPlayerConfig() => _root
             .GetElementsByTagName("script")
             .Select(e => e.Text())
-            .Select(s => Regex.Match(s,
-                    @"ytplayer\.config = (?<Json>\{[^\{\}]*(((?<Open>\{)[^\{\}]*)+((?<Close-Open>\})[^\{\}]*)+)*(?(Open)(?!))\})")
-                .Groups["Json"].Value)
+            .Select(s => Regex.Match(s, @"ytplayer\.config\s*=\s*(\{.*\}\});").Groups[1].Value)
             .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s))?
             .NullIfWhiteSpace()?
             .Pipe(Json.Parse)

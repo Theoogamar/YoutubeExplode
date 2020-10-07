@@ -16,7 +16,7 @@ namespace YoutubeExplode.ReverseEngineering
 
         private void CheckResponse(HttpResponseMessage response)
         {
-            // Some pages redirect to https://www.google.com/sorry instead of return 429
+            // Some pages redirect to https://www.google.com/sorry instead of returning 429
             if (response.RequestMessage.RequestUri.Host.EndsWith(".google.com", StringComparison.OrdinalIgnoreCase) &&
                 response.RequestMessage.RequestUri.LocalPath.StartsWith("/sorry/", StringComparison.OrdinalIgnoreCase))
                 throw RequestLimitExceededException.FailedHttpRequest(response);
@@ -37,8 +37,11 @@ namespace YoutubeExplode.ReverseEngineering
             HttpCompletionOption completion = HttpCompletionOption.ResponseHeadersRead) =>
             await _innerHttpClient.SendAsync(request, completion);
 
-        public async Task<HttpResponseMessage> GetAsync(string requestUri) =>
-            await SendAsync(new HttpRequestMessage(HttpMethod.Get, requestUri));
+        public async Task<HttpResponseMessage> GetAsync(string requestUri)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+            return await SendAsync(request);
+        }
 
         public async Task<HttpResponseMessage> HeadAsync(string requestUri)
         {
