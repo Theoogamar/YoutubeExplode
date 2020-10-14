@@ -157,6 +157,7 @@ namespace YoutubeDownloader
             btnPaste.Enabled = true;
         }
 
+        // try to parse the Id from the url
         private bool tryParseVideoId(string url, out string id)
         {
             try
@@ -392,7 +393,7 @@ namespace YoutubeDownloader
             }
         }
 
-        // timer for loading animation and updating the stopwatch in the listview
+        // timer for loading animation
         private void timer_Tick(object sender, EventArgs e)
         {
             // loading animation
@@ -490,18 +491,16 @@ namespace YoutubeDownloader
             listView.Items.Add(item);
 
             // add progress bar
-            ProgressBar ProgBar = new ProgressBar();
+            progbar = new ProgressBar();
 
             // Get bounds of the second colum
             Rectangle rect = listView.Items[listView.Items.Count - 1].SubItems[(int)subItems.Progress].Bounds;
 
             // parent progressBar to the listView
-            ProgBar.Parent = listView;
+            progbar.Parent = listView;
 
             // Put Prog bar In listView 
-            ProgBar.SetBounds(rect.X, rect.Y, rect.Width, rect.Height);
-
-            progbar = ProgBar;
+            progbar.SetBounds(rect.X, rect.Y, rect.Width, rect.Height);
 
             return item;
         }
@@ -564,21 +563,22 @@ namespace YoutubeDownloader
             txtLast.AllowDrop = !txtLast.AllowDrop;
         }
 
+        // open thumbnail image in default brower on click
         private void Thumbnail_Click(object sender, EventArgs e)
         {
             MouseEventArgs me = e as MouseEventArgs;
 
             // open the thumbnail in the default web broswer
-            if (me.Button == MouseButtons.Left)
+            if (me.Button == MouseButtons.Right)
                 Process.Start($"https://img.youtube.com/vi/{id}/maxresdefault.jpg");
-            else
+            else if (me.Button == MouseButtons.Middle)
                 Process.Start($"https://img.youtube.com/vi/{id}/hqdefault.jpg");
         }
 
         private void label2_Click(object sender, EventArgs e)
         {
             // easter egg
-            Clipboard.SetText("https://www.youtube.com/watch?v=laBOGMG-k_c");
+            Clipboard.SetText("https://www.youtube.com/watch?v=ul6TVEz2Mzo");
             BtnPaste_Click(sender, e);
             btnAudio.Text = "Swauss";          
         }

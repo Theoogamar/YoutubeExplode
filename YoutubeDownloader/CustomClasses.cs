@@ -32,6 +32,9 @@ namespace YoutubeDownloader
         }
     }
 
+    /// <summary>
+    /// Custom webclient holds listview item progressbar and an index for moveing the progress bar
+    /// </summary>
     public class CustomWebClient : WebClient
     {
         public ListViewItem Item { get; set; }
@@ -41,6 +44,9 @@ namespace YoutubeDownloader
         public int Index { get; set; }
     }
 
+    /// <summary>
+    /// Custom MediaFoundationEncoder holds listview item progressbar and an index for moveing the progress bar
+    /// </summary>
     public class CustomMediaFoundationEncoder : MediaFoundationEncoder
     {
         public ListViewItem Item { get; set; }
